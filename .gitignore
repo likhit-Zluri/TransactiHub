@@ -1,24 +1,80 @@
-# Logs
-logs
-*.log
+# Node.js
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Logs
+logs/
+*.log
+*.log.*
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Environment variable files
+.env
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+
+# Build files
+dist/
+build/
+coverage/
+*.map
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# PostgreSQL
+pgdata/
+*.pgsql
+
+# Test coverage reports
+coverage/
+
+# MacOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Debug files
+*.bak
+*.orig
+*.rej
+
+# Optional npm cache directory
+.npm/
+
+# Parcel-bundler cache (if applicable)
+.cache/
+
+# SASS cache
+.sass-cache/
+
+# React specific
+public/static/
+**/node_modules/
+**/build/
+
+# Jest testing coverage
+coverage/
+tests/
+
+# Logs
+*.log

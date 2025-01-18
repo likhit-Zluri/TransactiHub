@@ -1,18 +1,22 @@
-// services/api.ts
-import axios from "axios";
+// const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-const API_URL = process.env.BACKEND_URL;
+// API endpoints
+export const transactionEndpoints = {
+	// Add a single transaction
+	ADDTRANSACTION_API: "/transactions",
 
-if (!API_URL) {
-	throw new Error("API URL is not defined in the .env file.");
-}
+	// Edit a transaction
+	EDITTRANSACTION_API: "/transactions/:id",
 
-export const fetchTransactions = async () => {
-	try {
-		const response = await axios.get(API_URL);
-		return response.data; // Assuming the backend returns an array of transactions
-	} catch (error) {
-		console.error("Error fetching transactions:", error);
-		throw error; // You can handle errors as needed
-	}
+	// Get all transactions
+	GETALLTRANSACTIONS_API: "/transactions",
+
+	// Delete a transaction
+	DELETETRANSACTION_API: "/transactions/:id",
+
+	// Add multiple transactions through CSV
+	UPLOADTRANSACTIONS_API: "/transactions/upload",
+
+	// Delete all transactions
+	DELETEALLTRANSACTIONS_API: "/transactions",
 };

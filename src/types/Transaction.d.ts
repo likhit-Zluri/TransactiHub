@@ -1,7 +1,15 @@
+import { UUID } from "crypto";
+
 export interface Transaction {
-	id: number;
+	id: UUID;
 	date: string;
 	description: string;
-	originalAmount: string;
+	amount: string;
 	amountInINR: string;
+}
+export interface TransactionInput {
+	date: string;
+	description: string;
+	amount: number;
+	currency: string;
 }
