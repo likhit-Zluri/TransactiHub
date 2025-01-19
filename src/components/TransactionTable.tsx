@@ -1,14 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Transaction } from "../types/Transaction";
-import { getAllTransaction } from "../services/operations/transactionsAPI";
+import React, { useState, useEffect } from "react";
+import { Button } from "primereact/button";
+
+import { Transaction, TransactionInput } from "../types/Transaction";
+import {
+	getAllTransaction,
+	deleteTransaction,
+} from "../services/operations/transactionsAPI";
+import { UUID } from "crypto";
+import AddTransactionModal from "../modals/AddTransactionModal";
 
 const TransactionTable: React.FC = () => {
-	const [currentPage, setCurrentPage] = useState(1);
-	const [limit, setLimit] = useState(10);
+	const [currentPage, setCurrentPage] = useState(1); // Default to 1
+	const [limit, setLimit] = useState(10); // Default to 10
+
 	const [loading, setLoading] = useState(false);
+
 	const [transactionsList, setTransactionsList] = useState<Transaction[]>([]);
 	const [totalTransactions, setTotalTransactions] = useState(0);
 
+	const [addTransactionModal, setAddTransactionModal] = useState(false);
+
+	const totalPages = Math.ceil(totalTransactions / limit);
+
+	// Get all Transactions
 	useEffect(() => {
 		const fetchTransactions = async () => {
 			setLoading(true);
@@ -29,23 +43,32 @@ const TransactionTable: React.FC = () => {
 		fetchTransactions();
 	}, [currentPage, limit]);
 
-	const totalPages = Math.ceil(totalTransactions / limit);
-
-	// Helper to create pagination range
-	const getPaginationPages = () => {
-		const pages = [];
-		if (currentPage > 2) pages.push(1); // Always include the first page
-		if (currentPage > 3) pages.push("..."); // Ellipsis for skipped pages
-		if (currentPage > 1) pages.push(currentPage - 1); // Previous page
-		pages.push(currentPage); // Current page
-		if (currentPage < totalPages) pages.push(currentPage + 1); // Next page
-		if (currentPage < totalPages - 2) pages.push("..."); // Ellipsis for skipped pages
-		if (currentPage < totalPages - 1) pages.push(totalPages); // Always include the last page
-		return pages;
+	// Handle delete button click
+	const handleDelete = async (transactionId: UUID) => {
+		const confirmed = window.confirm(
+			"Are you sure you want to delete this transaction?"
+		);
+		if (confirmed) {
+			try {
+				const res = await deleteTransaction({ id: transactionId });
+				setTransactionsList((prevList) =>
+					prevList.filter((transaction) => transaction.id !== transactionId)
+				);
+			} catch (error) {
+				console.error("Error deleting transaction:", error);
+			}
+		}
 	};
 
-	const paginationPages = getPaginationPages();
+	const handleAddTransaction = () => {
+		console.log("handleAddTransaction");
+		setAddTransactionModal(true);
+	};
 
+	// const modalData = {
+	// 	addTransaction,
+	// 	setAddTransactionDialog,
+	// };
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
@@ -53,12 +76,17 @@ const TransactionTable: React.FC = () => {
 				<div className="flex justify-between items-center mb-6">
 					<h1 className="text-2xl font-semibold text-gray-700">Transactions</h1>
 					<div className="flex space-x-4">
-						<button className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition">
-							Upload CSV
-						</button>
-						<button className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition">
-							Add Transaction
-						</button>
+						<Button
+							label="Upload CSV"
+							icon="pi pi-upload"
+							className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
+						></Button>
+						<Button
+							label="Add Transaction"
+							icon="pi pi-plus"
+							className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
+							onClick={handleAddTransaction} // Open the dialog
+						></Button>
 					</div>
 				</div>
 
@@ -70,20 +98,30 @@ const TransactionTable: React.FC = () => {
 				) : (
 					// Table
 					<div className="overflow-x-auto">
-						<table className="w-full text-sm text-left text-gray-700 border border-gray-200">
+						<table className="min-w-full text-sm text-left text-gray-700 border border-gray-200">
 							<thead className="bg-gray-100 text-gray-600 uppercase">
 								<tr>
-									<th className="p-3 border border-gray-200">
+									<th className="p-3 border border-gray-200 w-[50px] min-w-[50px]">
 										<input type="checkbox" className="rounded" />
 									</th>
-									<th className="p-3 border border-gray-200">Date</th>
-									<th className="p-3 border border-gray-200">
+									<th className="p-3 border border-gray-200 w-[120px] min-w-[100px]">
+										Date
+									</th>
+									<th className="p-3 border border-gray-200 w-[300px] min-w-[200px]">
 										Transaction Description
 									</th>
-									<th className="p-3 border border-gray-200">Amount</th>
-									<th className="p-3 border border-gray-200">Currency</th>
-									<th className="p-3 border border-gray-200">Amount in INR</th>
-									<th className="p-3 border border-gray-200">Actions</th>
+									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
+										Amount
+									</th>
+									<th className="p-3 border border-gray-200 w-[120px] min-w-[100px]">
+										Currency
+									</th>
+									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
+										Amount in INR
+									</th>
+									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
+										Actions
+									</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -101,22 +139,27 @@ const TransactionTable: React.FC = () => {
 											{transaction.date}
 										</td>
 										<td className="p-3 border border-gray-200">
-											{transaction.description}
+											{transaction.description.length > 50
+												? `${transaction.description.substring(0, 50)}...`
+												: transaction.description}
 										</td>
 										<td className="p-3 border border-gray-200">
-											{transaction.amount}
+											{Number(transaction.amount) / 100}
 										</td>
 										<td className="p-3 border border-gray-200">
 											{transaction.currency}
 										</td>
 										<td className="p-3 border border-gray-200">
-											{transaction.amountInINR}
+											{Number(transaction.amountInINR) / 100}
 										</td>
 										<td className="p-3 border border-gray-200 flex space-x-2">
 											<button className="text-blue-500 hover:underline">
 												Edit
 											</button>
-											<button className="text-red-500 hover:underline">
+											<button
+												className="text-red-500 hover:underline"
+												onClick={() => handleDelete(transaction.id)}
+											>
 												Delete
 											</button>
 										</td>
@@ -143,29 +186,40 @@ const TransactionTable: React.FC = () => {
 							))}
 						</select>
 					</div>
-					<div className="flex space-x-2 text-sm text-gray-600">
-						{paginationPages.map((page, index) =>
-							page === "..." ? (
-								<span key={index} className="px-2">
-									...
-								</span>
-							) : (
-								<button
-									key={index}
-									onClick={() => setCurrentPage(Number(page))}
-									className={`px-2 ${
-										page === currentPage
-											? "text-blue-600 font-bold"
-											: "text-gray-600 hover:underline"
-									}`}
-								>
-									{page}
-								</button>
-							)
-						)}
+					<div className="text-sm text-gray-600">
+						Page {currentPage} of {totalPages}
+					</div>
+					<div className="flex space-x-2">
+						<button
+							onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+							disabled={currentPage === 1}
+							className={`text-blue-500 hover:text-blue-700 transition ${
+								currentPage === 1 && "opacity-50 cursor-not-allowed"
+							}`}
+						>
+							Prev
+						</button>
+						<button
+							onClick={() =>
+								setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+							}
+							disabled={currentPage === totalPages}
+							className={`text-blue-500 hover:text-blue-700 transition ${
+								currentPage === totalPages && "opacity-50 cursor-not-allowed"
+							}`}
+						>
+							Next
+						</button>
 					</div>
 				</div>
 			</div>
+
+			{/* Add Transaction Dialog */}
+			{addTransactionModal ? (
+				<AddTransactionModal setAddTransactionModal={setAddTransactionModal} />
+			) : (
+				<></>
+			)}
 		</div>
 	);
 };

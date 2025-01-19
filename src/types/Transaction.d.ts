@@ -5,6 +5,7 @@ export interface Transaction {
 	date: string;
 	description: string;
 	amount: string;
+	currency: string;
 	amountInINR: string;
 }
 export interface TransactionInput {

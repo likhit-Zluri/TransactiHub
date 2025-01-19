@@ -23,7 +23,7 @@ export const apiConnector = ({
 	headers,
 	params,
 }: ApiConnectorParams) => {
-	console.log("params", method, url, params);
+	console.log("params", method, url, bodyData, params);
 	return axiosInstance({
 		method,
 		url,
