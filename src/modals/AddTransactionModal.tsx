@@ -1,21 +1,41 @@
 // import React, { useState } from "react";
-// import { Button } from "primereact/button";
-// import { InputText } from "primereact/inputtext";
-// import { InputNumber } from "primereact/inputnumber";
-// import { Calendar } from "primereact/calendar";
-// import { Dropdown } from "primereact/dropdown";
+// import {
+// 	Modal,
+// 	Button,
+// 	Input,
+// 	Select,
+// 	InputNumber,
+// 	DatePicker,
+// 	Spin,
+// 	notification,
+// } from "antd";
 
+// import moment from "moment";
 // import { addTransaction } from "../services/operations/transactionsAPI";
 
-// const AddTransactionModal = ({ setAddTransactionModal }) => {
+// import { Transaction } from "../types/Transaction";
+// import { Dropdown } from "primereact/dropdown";
+
+// interface AddTransactionModalProps {
+// 	setAddTransactionModal: (value: boolean) => void;
+// 	onTransactionAdded: (transaction: Transaction) => void;
+// }
+
+// const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+// 	setAddTransactionModal,
+// 	onTransactionAdded,
+// }) => {
+// 	const { Option } = Select;
+
 // 	const [formData, setFormData] = useState({
 // 		description: "",
-// 		amount: 0,
-// 		date: "", // Keep it as null initially
-// 		currency: "",
+// 		amount: null,
+// 		date: "",
+// 		currency: null,
 // 	});
 
 // 	const [errorMessages, setErrorMessages] = useState<string[]>([]);
+// 	const [loading, setLoading] = useState(false);
 
 // 	const currencyOptions = [
 // 		{ label: "USD", value: "USD" },
@@ -24,14 +44,23 @@
 // 		{ label: "GBP", value: "GBP" },
 // 	];
 
-// 	const handleChange = (e: any) => {
+// 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 // 		setFormData({ ...formData, [e.target.name]: e.target.value });
+// 	};
+
+// 	const handleSelectChange = (value: string, name: string) => {
+// 		setFormData({ ...formData, [name]: value });
+// 	};
+
+// 	const handleDateChange = (date: moment.Moment | null, dateString: string) => {
+// 		setFormData({ ...formData, date: dateString });
 // 	};
 
 // 	const validateForm = () => {
 // 		const errors: string[] = [];
 // 		if (!formData.description) errors.push("Description is required");
-// 		if (formData.amount === null) errors.push("Amount is required");
+// 		if (formData.amount === null || formData.amount <= 0)
+// 			errors.push("Amount is required and must be greater than zero");
 // 		if (!formData.date) errors.push("Date is required");
 // 		if (!formData.currency) errors.push("Currency is required");
 
@@ -42,132 +71,200 @@
 // 	const handleSave = async () => {
 // 		if (!validateForm()) return;
 
+// 		setLoading(true);
+
 // 		const formattedDate = formData.date
-// 			? new Date(formData.date)
-// 					.toISOString()
-// 					.split("T")[0]
-// 					.split("-")
-// 					.reverse()
-// 					.join("-")
+// 			? formData.date.split("-").reverse().join("-")
 // 			: null;
 
-// 		// Update formData with the formatted date
 // 		const updatedFormData = { ...formData, date: formattedDate };
 
-// 		const res = await addTransaction(updatedFormData);
+// 		try {
+// 			const response = await addTransaction(updatedFormData);
+// 			console.log("response in Add Transaction Modal", response);
 
-// 		setAddTransactionModal(false);
+// 			// Notify the parent component about the new transaction.
+// 			onTransactionAdded(response.transaction);
+
+// 			setAddTransactionModal(false);
+// 			if (response.success === true) {
+// 				notification.success({
+// 					message: "Transaction Added",
+// 					description: "Your transaction has been successfully added.",
+// 				});
+// 			} else if (response.success === false) {
+// 				notification.error({
+// 					message: "Error",
+// 					description: "An error occurred while adding the transaction.",
+// 				});
+// 			}
+// 		} catch (error) {
+// 			console.error("Error adding transaction:", error);
+// 			notification.error({
+// 				message: "Error",
+// 				description: "An error occurred while adding the transaction.",
+// 			});
+// 		} finally {
+// 			setLoading(false);
+// 		}
 // 	};
 
 // 	return (
-// 		<div className="fixed inset-0 z-[1000] grid h-screen w-screen place-items-center overflow-auto bg-white bg-opacity-10 backdrop-blur-sm">
-// 			<div className="bg-white p-8 rounded-md shadow-lg max-w-lg w-full space-y-6">
-// 				<div className="flex items-center justify-between">
-// 					<h2 className="text-2xl font-semibold text-gray-800">
-// 						Add Transaction
-// 					</h2>
-// 					<div className="flex space-x-4">
-// 						<Button
-// 							label="Close"
-// 							icon="pi pi-times p-ml-2"
-// 							onClick={() => setAddTransactionModal(false)}
-// 							className="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg shadow-md transition"
-// 							iconPos="left"
-// 						/>
-// 						<Button
-// 							label="Save"
-// 							icon="pi pi-save"
-// 							onClick={handleSave}
-// 							className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-3 rounded-lg shadow-md transition"
-// 							iconPos="left"
-// 						/>
-// 					</div>
+// 		<Modal
+// 			title="Add Transaction"
+// 			visible={true}
+// 			onCancel={() => setAddTransactionModal(false)}
+// 			footer={null}
+// 			width={600}
+// 			closable={false}
+// 		>
+// 			<div className="add-transaction-modal">
+// 				{/* Description Field */}
+// 				<div className="form-field">
+// 					<Input
+// 						placeholder="Enter description"
+// 						name="description"
+// 						value={formData.description}
+// 						onChange={handleChange}
+// 						className="ant-input"
+// 						required
+// 						disabled={loading}
+// 					/>
+// 					{errorMessages.includes("Description is required") && (
+// 						<span className="text-red-500">Description is required</span>
+// 					)}
 // 				</div>
 
-// 				<InputText
-// 					placeholder="Enter description"
-// 					id="description"
-// 					name="description"
-// 					value={formData.description}
-// 					onChange={handleChange}
-// 					className="p-inputtext w-full sm:w-3/4 mt-2 text-lg px-6 py-3 border border-gray-300 rounded-sm"
-// 					required
-// 					autoFocus
-// 				/>
-
-// 				<div className="flex gap-6">
-// 					<Dropdown
-// 						id="currency"
+// 				{/* Currency Field */}
+// 				<div className="form-field mt-3">
+// 					<Select
 // 						name="currency"
+// 						placeholder="Select Currency"
 // 						value={formData.currency}
-// 						options={currencyOptions}
-// 						onChange={handleChange}
-// 						optionLabel="label"
-// 						optionValue="value"
-// 						placeholder="Currency"
-// 						className="mt-2 w-full sm:w-3/4 text-lg px-6 py-3 border border-gray-300 rounded-md bg-opacity-50"
-// 						required
-// 					/>
+// 						onChange={(value) => handleSelectChange(value, "currency")}
+// 						className="w-full"
+// 						disabled={loading}
+// 					>
+// 						{currencyOptions.map((option) => (
+// 							<Option key={option.value} value={option.value}>
+// 								{option.label}
+// 							</Option>
+// 						))}
+// 					</Select>
+// 					{errorMessages.includes("Currency is required") && (
+// 						<span className="text-red-500">Currency is required</span>
+// 					)}
+// 				</div>
 
+// 				{/* Amount Field */}
+// 				<div className="form-field mt-3">
 // 					<InputNumber
-// 						placeholder="Enter amount"
-// 						id="amount"
+// 						placeholder="Enter Amount"
 // 						name="amount"
 // 						value={formData.amount}
-// 						onValueChange={(e) =>
-// 							handleChange({ target: { name: "amount", value: e.value } })
-// 						}
-// 						className="p-inputnumber w-full sm:w-3/4 mt-2 text-lg px-6 py-3 border border-gray-300 rounded-md"
+// 						onChange={(value) => setFormData({ ...formData, amount: value })}
+// 						className="w-full"
+// 						min={1}
 // 						required
+// 						disabled={loading}
 // 					/>
+// 					{errorMessages.includes(
+// 						"Amount is required and must be greater than zero"
+// 					) && (
+// 						<span className="text-red-500">
+// 							Amount must be greater than zero
+// 						</span>
+// 					)}
 // 				</div>
 
-// 				<Calendar
-// 					id="date"
-// 					name="date"
-// 					value={formData.date}
-// 					onChange={(e) => setFormData({ ...formData, date: e.value })}
-// 					dateFormat="dd/mm/yy"
-// 					placeholder="DD/MM/YYYY"
-// 					className="mt-2 text-lg px-6 py-3 border border-gray-300 rounded-md bg-opacity-100 w-full"
-// 					required
-// 				/>
+// 				{/* Date Field */}
+// 				<div className="form-field mt-3">
+// 					<DatePicker
+// 						name="date"
+// 						placeholder="Select Date"
+// 						value={formData.date ? moment(formData.date, "YYYY-MM-DD") : null}
+// 						onChange={handleDateChange}
+// 						format="YYYY-MM-DD"
+// 						className="w-full"
+// 						disabled={loading}
+// 					/>
+// 					{errorMessages.includes("Date is required") && (
+// 						<span className="text-red-500">Date is required</span>
+// 					)}
+// 				</div>
 
-// 				{errorMessages.length > 0 && (
-// 					<div className="p-error mt-4 text-red-500">
-// 						<ul className="list-disc pl-5">
-// 							{errorMessages.map((msg, idx) => (
-// 								<li key={idx}>{msg}</li>
-// 							))}
-// 						</ul>
+// 				{/* Loader */}
+// 				{loading && (
+// 					<div className="text-center mt-4">
+// 						<Spin />
+// 						<p>Processing Transaction...</p>
 // 					</div>
 // 				)}
+
+// 				{/* Modal Footer */}
+// 				<div className="modal-footer mt-4 text-center">
+// 					<Button
+// 						onClick={() => setAddTransactionModal(false)}
+// 						disabled={loading}
+// 					>
+// 						Close
+// 					</Button>
+// 					<Button
+// 						type="primary"
+// 						onClick={handleSave}
+// 						loading={loading}
+// 						className="ml-2"
+// 						disabled={loading}
+// 					>
+// 						Save
+// 					</Button>
+// 				</div>
 // 			</div>
-// 		</div>
+// 		</Modal>
 // 	);
 // };
 
 // export default AddTransactionModal;
 
-import React, { useState } from "react";
-import { Button } from "primereact/button";
-import { InputText } from "primereact/inputtext";
-import { InputNumber } from "primereact/inputnumber";
-import { Calendar } from "primereact/calendar";
-import { Dropdown } from "primereact/dropdown";
+import React, { useState, useEffect } from "react";
+import {
+	Modal,
+	Button,
+	Input,
+	Select,
+	InputNumber,
+	DatePicker,
+	Spin,
+	notification,
+} from "antd";
+import moment from "moment";
+import {
+	addTransaction,
+	editTransaction,
+} from "../services/operations/transactionsAPI"; // Include editTransaction API call
+import { Transaction, TransactionInDB } from "../types/Transaction";
 
-import { addTransaction } from "../services/operations/transactionsAPI";
+interface AddTransactionModalProps {
+	setAddTransactionModal: (value: boolean) => void;
+	onTransactionAdded: (transaction: Transaction) => void;
+	transactionToEdit?: TransactionInDB; // Prop for editing an existing transaction
+}
 
-const AddTransactionModal = ({ setAddTransactionModal }) => {
+const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+	setAddTransactionModal,
+	onTransactionAdded,
+	transactionToEdit,
+}) => {
+	const { Option } = Select;
 	const [formData, setFormData] = useState({
 		description: "",
-		amount: 0,
-		date: "", // Keep it as null initially
-		currency: "",
+		amount: null,
+		date: "",
+		currency: null,
 	});
 
 	const [errorMessages, setErrorMessages] = useState<string[]>([]);
-	const [loading, setLoading] = useState(false); // Loading state
+	const [loading, setLoading] = useState(false);
 
 	const currencyOptions = [
 		{ label: "USD", value: "USD" },
@@ -176,14 +273,36 @@ const AddTransactionModal = ({ setAddTransactionModal }) => {
 		{ label: "GBP", value: "GBP" },
 	];
 
-	const handleChange = (e: any) => {
+	useEffect(() => {
+		if (transactionToEdit) {
+			// Pre-fill form data for editing
+			setFormData({
+				description: transactionToEdit.description,
+				amount: transactionToEdit.amount / 100, // Assuming amount is in cents
+				// date: moment(transactionToEdit.date).format("YYYY-MM-DD"),
+				date: transactionToEdit.date.split("-").reverse().join("-"),
+				currency: transactionToEdit.currency,
+			});
+		}
+	}, [transactionToEdit]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
+	};
+
+	const handleSelectChange = (value: string, name: string) => {
+		setFormData({ ...formData, [name]: value });
+	};
+
+	const handleDateChange = (date: moment.Moment | null, dateString: string) => {
+		setFormData({ ...formData, date: dateString });
 	};
 
 	const validateForm = () => {
 		const errors: string[] = [];
 		if (!formData.description) errors.push("Description is required");
-		if (formData.amount === null) errors.push("Amount is required");
+		if (formData.amount === null || formData.amount <= 0)
+			errors.push("Amount is required and must be greater than zero");
 		if (!formData.date) errors.push("Date is required");
 		if (!formData.currency) errors.push("Currency is required");
 
@@ -194,127 +313,168 @@ const AddTransactionModal = ({ setAddTransactionModal }) => {
 	const handleSave = async () => {
 		if (!validateForm()) return;
 
-		setLoading(true); // Start loading
+		setLoading(true);
 
 		const formattedDate = formData.date
-			? new Date(formData.date)
-					.toISOString()
-					.split("T")[0]
-					.split("-")
-					.reverse()
-					.join("-")
+			? formData.date.split("-").reverse().join("-")
 			: null;
 
-		// Update formData with the formatted date
 		const updatedFormData = { ...formData, date: formattedDate };
 
 		try {
-			await addTransaction(updatedFormData);
+			let response;
+			if (transactionToEdit) {
+				// Edit existing transaction
+				response = await editTransaction(transactionToEdit.id, updatedFormData);
+			} else {
+				// Add new transaction
+				response = await addTransaction(updatedFormData);
+			}
+
+			console.log("response in Add/Edit Transaction Modal", response);
+
+			// Notify the parent component about the added or edited transaction.
+			onTransactionAdded(response.data.transaction);
+
 			setAddTransactionModal(false);
+			if (response.success === true) {
+				notification.success({
+					message: transactionToEdit
+						? "Transaction Updated"
+						: "Transaction Added",
+					description: `Your transaction has been ${
+						transactionToEdit ? "successfully updated" : "successfully added"
+					}.`,
+				});
+			} else {
+				notification.error({
+					message: "Error",
+					description: "An error occurred while processing the transaction.",
+				});
+			}
 		} catch (error) {
-			console.error("Error adding transaction:", error);
+			console.error("Error adding/editing transaction:", error);
+			notification.error({
+				message: "Error",
+				description: "An error occurred while processing the transaction.",
+			});
 		} finally {
-			setLoading(false); // Stop loading
+			setLoading(false);
 		}
 	};
 
 	return (
-		<div className="fixed inset-0 z-[1000] grid h-screen w-screen place-items-center overflow-auto bg-white bg-opacity-10 backdrop-blur-sm">
-			<div className="bg-white p-8 rounded-md shadow-lg max-w-lg w-full space-y-6">
-				<div className="flex items-center justify-between">
-					<h2 className="text-2xl font-semibold text-gray-800">
-						Add Transaction
-					</h2>
-					<div className="flex space-x-4">
-						<Button
-							label="Close"
-							icon="pi pi-times p-ml-2"
-							onClick={() => setAddTransactionModal(false)}
-							className="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg shadow-md transition"
-							iconPos="left"
-							disabled={loading} // Disable button when loading
-						/>
-						<Button
-							label="Save"
-							icon="pi pi-save"
-							onClick={handleSave}
-							className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-3 rounded-lg shadow-md transition"
-							iconPos="left"
-							disabled={loading} // Disable button when loading
-						/>
-					</div>
+		<Modal
+			title={transactionToEdit ? "Edit Transaction" : "Add Transaction"}
+			visible={true}
+			onCancel={() => setAddTransactionModal(false)}
+			footer={null}
+			width={600}
+			closable={false}
+		>
+			<div className="add-transaction-modal">
+				{/* Description Field */}
+				<div className="form-field">
+					<Input
+						placeholder="Enter description"
+						name="description"
+						value={formData.description}
+						onChange={handleChange}
+						className="ant-input"
+						required
+						disabled={loading}
+					/>
+					{errorMessages.includes("Description is required") && (
+						<span className="text-red-500">Description is required</span>
+					)}
 				</div>
 
-				<InputText
-					placeholder="Enter description"
-					id="description"
-					name="description"
-					value={formData.description}
-					onChange={handleChange}
-					className="p-inputtext w-full sm:w-3/4 mt-2 text-lg px-6 py-3 border border-gray-300 rounded-sm"
-					required
-					autoFocus
-					disabled={loading} // Disable input when loading
-				/>
-
-				<div className="flex gap-6">
-					<Dropdown
-						id="currency"
+				{/* Currency Field */}
+				<div className="form-field mt-3">
+					<Select
 						name="currency"
+						placeholder="Select Currency"
 						value={formData.currency}
-						options={currencyOptions}
-						onChange={handleChange}
-						optionLabel="label"
-						optionValue="value"
-						placeholder="Currency"
-						className="mt-2 w-full sm:w-3/4 text-lg px-6 py-3 border border-gray-300 rounded-md bg-opacity-50"
-						required
-						disabled={loading} // Disable dropdown when loading
-					/>
+						onChange={(value) => handleSelectChange(value, "currency")}
+						className="w-full"
+						disabled={loading}
+					>
+						{currencyOptions.map((option) => (
+							<Option key={option.value} value={option.value}>
+								{option.label}
+							</Option>
+						))}
+					</Select>
+					{errorMessages.includes("Currency is required") && (
+						<span className="text-red-500">Currency is required</span>
+					)}
+				</div>
 
+				{/* Amount Field */}
+				<div className="form-field mt-3">
 					<InputNumber
-						placeholder="Enter amount"
-						id="amount"
+						placeholder="Enter Amount"
 						name="amount"
 						value={formData.amount}
-						onValueChange={(e) =>
-							handleChange({ target: { name: "amount", value: e.value } })
-						}
-						className="p-inputnumber w-full sm:w-3/4 mt-2 text-lg px-6 py-3 border border-gray-300 rounded-md"
+						onChange={(value) => setFormData({ ...formData, amount: value })}
+						className="w-full"
+						min={1}
 						required
-						disabled={loading} // Disable input when loading
+						disabled={loading}
 					/>
+					{errorMessages.includes(
+						"Amount is required and must be greater than zero"
+					) && (
+						<span className="text-red-500">
+							Amount must be greater than zero
+						</span>
+					)}
 				</div>
 
-				<Calendar
-					id="date"
-					name="date"
-					value={formData.date}
-					onChange={(e) => setFormData({ ...formData, date: e.value })}
-					dateFormat="dd/mm/yy"
-					placeholder="DD/MM/YYYY"
-					className="mt-2 text-lg px-6 py-3 border border-gray-300 rounded-md bg-opacity-100 w-full"
-					required
-					disabled={loading} // Disable calendar when loading
-				/>
+				{/* Date Field */}
+				<div className="form-field mt-3">
+					<DatePicker
+						name="date"
+						placeholder="Select Date"
+						value={formData.date ? moment(formData.date, "YYYY-MM-DD") : null}
+						onChange={handleDateChange}
+						format="YYYY-MM-DD"
+						className="w-full"
+						disabled={loading}
+					/>
+					{errorMessages.includes("Date is required") && (
+						<span className="text-red-500">Date is required</span>
+					)}
+				</div>
 
+				{/* Loader */}
 				{loading && (
-					<div className="text-center text-green-600 font-semibold">
-						Adding Transaction...
+					<div className="text-center mt-4">
+						<Spin />
+						<p>Processing Transaction...</p>
 					</div>
 				)}
 
-				{errorMessages.length > 0 && (
-					<div className="p-error mt-4 text-red-500">
-						<ul className="list-disc pl-5">
-							{errorMessages.map((msg, idx) => (
-								<li key={idx}>{msg}</li>
-							))}
-						</ul>
-					</div>
-				)}
+				{/* Modal Footer */}
+				<div className="modal-footer mt-4 text-center">
+					<Button
+						onClick={() => setAddTransactionModal(false)}
+						disabled={loading}
+					>
+						Close
+					</Button>
+					<Button
+						type="primary"
+						onClick={handleSave}
+						loading={loading}
+						className="ml-2"
+						disabled={loading}
+					>
+						{transactionToEdit ? "Save Changes" : "Save"}
+					</Button>
+				</div>
 			</div>
-		</div>
+		</Modal>
 	);
 };
 

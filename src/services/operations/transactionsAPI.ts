@@ -5,8 +5,8 @@ import { UUID } from "crypto";
 
 const {
 	ADDTRANSACTION_API,
-	// EDITTRANSACTION_API,
-	GETALLTRANSACTIONS_API,
+	EDITTRANSACTION_API,
+	GETPAGINATEDTRANSACTIONS_API,
 	DELETETRANSACTION_API,
 	// UPLOADTRANSACTIONS_API,
 	// DELETEALLTRANSACTIONS_API,
@@ -29,7 +29,7 @@ export async function addTransaction(data: TransactionInput) {
 			throw new Error("Failed to add transaction");
 		}
 
-		// return res.data;
+		return res.data;
 	} catch (error) {
 		console.error("Error:", error);
 	} finally {
@@ -37,18 +37,50 @@ export async function addTransaction(data: TransactionInput) {
 	}
 }
 
-export async function getAllTransaction({
-	currentPage,
-	limit,
-}: {
-	currentPage: number;
-	limit: number;
-}) {
+export const editTransaction = async (
+	transactionId: UUID,
+	updatedData: {
+		date?: string;
+		description?: string;
+		amount?: number;
+		currency?: string;
+	}
+) => {
+	try {
+		// Ensure the URL includes the correct transaction ID as params
+		const url = `${EDITTRANSACTION_API.replace(":id", transactionId)}`;
+		const res = await apiConnector({
+			url: url,
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			bodyData: updatedData,
+		});
+
+		console.log("res in editTransaction", res);
+
+		return res.data;
+	} catch (error: unknown) {
+		// Handle errors appropriately
+		if (error instanceof Error) {
+			console.error("Error editing transaction:", error.message);
+		} else {
+			console.error("An unknown error occurred while editing the transaction.");
+		}
+		throw new Error("An error occurred while editing the transaction.");
+	}
+};
+
+export async function getPaginatedTransactions(
+	currentPage: number,
+	limit: number
+) {
 	try {
 		// Construct query parameters using URLSearchParams
 		const queryParams = `page=${currentPage.toString()}&limit=${limit.toString()}`;
 		console.log("queryParams", queryParams);
-		const url = `${GETALLTRANSACTIONS_API}?${queryParams}`;
+		const url = `${GETPAGINATEDTRANSACTIONS_API}?${queryParams}`;
 		console.log("url", url);
 
 		// Make a GET request with query parameters
@@ -64,7 +96,7 @@ export async function getAllTransaction({
 			throw new Error("Failed to fetch transactions");
 		}
 
-		return res.data.data;
+		return res.data;
 	} catch (error) {
 		console.error("Error:", error);
 	} finally {
@@ -72,11 +104,11 @@ export async function getAllTransaction({
 	}
 }
 
-export async function deleteTransaction({ id }: { id: UUID }) {
+export async function deleteTransaction(transactionId: UUID) {
 	try {
 		// console.log("id", id, typeof id);
-		// Ensure the URL includes the correct transaction ID
-		const url = `${DELETETRANSACTION_API.replace(":id", id)}`;
+		// Ensure the URL includes the correct transaction ID as params
+		const url = `${DELETETRANSACTION_API.replace(":id", transactionId)}`;
 
 		console.log("before apiConnector");
 		const res = await apiConnector({

@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "primereact/button";
+import { Modal, notification } from "antd";
 
-import { Transaction, TransactionInput } from "../types/Transaction";
+import { TransactionInDB } from "../types/Transaction";
+
 import {
-	getAllTransaction,
+	getPaginatedTransactions,
 	deleteTransaction,
+	editTransaction,
 } from "../services/operations/transactionsAPI";
+
 import { UUID } from "crypto";
+
 import AddTransactionModal from "../modals/AddTransactionModal";
+import UploadCSVModal from "../modals/UploadCSVmodal";
 
 const TransactionTable: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
@@ -15,26 +21,44 @@ const TransactionTable: React.FC = () => {
 
 	const [loading, setLoading] = useState(false);
 
-	const [transactionsList, setTransactionsList] = useState<Transaction[]>([]);
+	const [transactionsList, setTransactionsList] = useState<TransactionInDB[]>(
+		[]
+	);
 	const [totalTransactions, setTotalTransactions] = useState(0);
 
 	const [addTransactionModal, setAddTransactionModal] = useState(false);
+	const [uploadCSVModal, setUploadCSVModal] = useState(false);
+	const [editingTransaction, setEditingTransaction] =
+		useState<TransactionInDB | null>(null);
 
 	const totalPages = Math.ceil(totalTransactions / limit);
 
-	// Get all Transactions
+	// Get paginated Transactions
 	useEffect(() => {
 		const fetchTransactions = async () => {
 			setLoading(true);
 			try {
-				const response = await getAllTransaction({
-					currentPage,
-					limit,
-				});
-				setTransactionsList(response.transactions);
-				setTotalTransactions(response.totalCount);
+				const response = await getPaginatedTransactions(currentPage, limit);
+				setTransactionsList(response.data.transactions);
+				setTotalTransactions(response.data.totalCount);
+
+				if (response.success === true) {
+					notification.success({
+						message: "Fetched Transactions",
+						description: "Transactions have been successfully loaded.",
+					});
+				} else if (response.success === false) {
+					notification.error({
+						message: "Error Fetching Transactions",
+						description: "An error occurred while fetching the transactions.",
+					});
+				}
 			} catch (error) {
 				console.error("Error fetching transactions:", error);
+				notification.error({
+					message: "Error",
+					description: "An error occurred while fetching the transactions.",
+				});
 			} finally {
 				setLoading(false);
 			}
@@ -45,30 +69,101 @@ const TransactionTable: React.FC = () => {
 
 	// Handle delete button click
 	const handleDelete = async (transactionId: UUID) => {
-		const confirmed = window.confirm(
-			"Are you sure you want to delete this transaction?"
-		);
-		if (confirmed) {
-			try {
-				const res = await deleteTransaction({ id: transactionId });
-				setTransactionsList((prevList) =>
-					prevList.filter((transaction) => transaction.id !== transactionId)
-				);
-			} catch (error) {
-				console.error("Error deleting transaction:", error);
-			}
-		}
+		Modal.confirm({
+			title: "Are you sure you want to delete this transaction?",
+			onOk: async () => {
+				try {
+					const res = await deleteTransaction(transactionId);
+					console.log("res in handleDelete", res);
+					// If successful, filter out the deleted transaction from the list
+					setTransactionsList((prevList) =>
+						prevList.filter((transaction) => transaction.id !== transactionId)
+					);
+
+					notification.success({
+						message: "Transaction Deleted",
+						description: "The transaction has been deleted successfully.",
+					});
+				} catch (error) {
+					console.error("Error deleting transaction:", error);
+					notification.error({
+						message: "Error Deleting Transaction",
+						description: "An error occurred while deleting the transaction.",
+					});
+				}
+			},
+			onCancel() {
+				// Optional: Handle cancel event (nothing to do in this case)
+				console.log("Delete action canceled.");
+			},
+		});
 	};
 
 	const handleAddTransaction = () => {
-		console.log("handleAddTransaction");
+		setEditingTransaction(null);
 		setAddTransactionModal(true);
 	};
 
-	// const modalData = {
-	// 	addTransaction,
-	// 	setAddTransactionDialog,
+	// Add or Update Transaction here changes
+	// const handleTransactionAddedOrUpdated = (newTransaction: TransactionInDB) => {
+	// 	console.log("newTransaction", newTransaction);
+
+	// 	if (editingTransaction) {
+	// 		// Update the transaction in the list
+	// 		setTransactionsList((prevList) =>
+	// 			prevList.map((transaction) =>
+	// 				transaction.id === newTransaction.id ? newTransaction : transaction
+	// 			)
+	// 		);
+	// 	} else {
+	// 		// Add new transaction to the list
+	// 		setTransactionsList((prevList) => [newTransaction, ...prevList]);
+	// 		setTotalTransactions((prev) => prev + 1);
+	// 	}
+	// 	setAddTransactionModal(false); // Close the modal
 	// };
+
+	const handleTransactionAddedOrUpdated = (newTransaction: TransactionInDB) => {
+		console.log("newTransaction", newTransaction);
+
+		setTransactionsList((prevList) => {
+			const updatedList = editingTransaction
+				? prevList.map((transaction) =>
+						transaction.id === newTransaction.id ? newTransaction : transaction
+				  )
+				: [newTransaction, ...prevList];
+
+			// Sort the transactions in descending order by date
+			return updatedList.sort(
+				(a, b) =>
+					new Date(b.date.split("-").reverse().join("-")).getTime() -
+					new Date(a.date.split("-").reverse().join("-")).getTime()
+			);
+		});
+
+		if (!editingTransaction) {
+			setTotalTransactions((prev) => prev + 1);
+		}
+
+		setAddTransactionModal(false); // Close the modal
+	};
+
+	// Edit Transaction - Sets the transaction to be edited
+	const handleEditTransaction = (transaction: TransactionInDB) => {
+		console.log("transaction in handleEditTransaction", transaction);
+		setEditingTransaction(transaction); // Set the transaction to be edited
+		console.log(
+			"editingTransaction in handleEditTransaction",
+			editingTransaction
+		);
+		setAddTransactionModal(true); // Open modal for editing
+	};
+
+	const handleCSVUpload = () => {
+		console.log("handleCSVUpload");
+		setUploadCSVModal(true);
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
@@ -80,6 +175,7 @@ const TransactionTable: React.FC = () => {
 							label="Upload CSV"
 							icon="pi pi-upload"
 							className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
+							onClick={handleCSVUpload} // Open the dialog
 						></Button>
 						<Button
 							label="Add Transaction"
@@ -153,7 +249,10 @@ const TransactionTable: React.FC = () => {
 											{Number(transaction.amountInINR) / 100}
 										</td>
 										<td className="p-3 border border-gray-200 flex space-x-2">
-											<button className="text-blue-500 hover:underline">
+											<button
+												className="text-blue-500 hover:underline"
+												onClick={() => handleEditTransaction(transaction)}
+											>
 												Edit
 											</button>
 											<button
@@ -214,11 +313,18 @@ const TransactionTable: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Add Transaction Dialog */}
-			{addTransactionModal ? (
-				<AddTransactionModal setAddTransactionModal={setAddTransactionModal} />
-			) : (
-				<></>
+			{/* Add/Edit Transaction Dialog */}
+			{addTransactionModal && (
+				<AddTransactionModal
+					setAddTransactionModal={setAddTransactionModal}
+					onTransactionAdded={handleTransactionAddedOrUpdated}
+					transactionToEdit={editingTransaction} // Pass the editing transaction
+				/>
+			)}
+
+			{/* Upload CSV Dialog */}
+			{uploadCSVModal && (
+				<UploadCSVModal setUploadCSVModal={setUploadCSVModal} />
 			)}
 		</div>
 	);

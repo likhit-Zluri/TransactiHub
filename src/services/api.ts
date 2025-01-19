@@ -9,7 +9,7 @@ export const transactionEndpoints = {
 	EDITTRANSACTION_API: "/transactions/:id",
 
 	// Get all transactions
-	GETALLTRANSACTIONS_API: "/transactions",
+	GETPAGINATEDTRANSACTIONS_API: "/transactions",
 
 	// Delete a transaction
 	DELETETRANSACTION_API: "/transactions/:id",
