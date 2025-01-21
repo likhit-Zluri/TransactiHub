@@ -11,7 +11,7 @@ const {
 	EDITTRANSACTION_API,
 	GETPAGINATEDTRANSACTIONS_API,
 	DELETETRANSACTION_API,
-	// UPLOADTRANSACTIONS_API,
+	UPLOADTRANSACTIONS_API,
 	// DELETEALLTRANSACTIONS_API,
 } = transactionEndpoints;
 
@@ -168,27 +168,24 @@ export async function uploadTransactions(
 		// Create a FormData object to handle the file upload
 		const formData = new FormData();
 		formData.append("file", file);
-		formData.append("skipCSVDuplicates", skipCSVDuplicates.toString()); // optional field to skip duplicates
+		formData.append("skipCSVDuplicates", skipCSVDuplicates.toString());
 
-		console.log("formData in uploadTransaction", formData);
+		const res = await apiConnector({
+			url: UPLOADTRANSACTIONS_API, 
+			method: "POST",
+			headers: {
+				"Content-Type": "multipart/form-data", // Important to set for file uploads
+			},
+			bodyData: formData,
+		});
 
-		// Send the POST request to upload the file
-		// const res = await apiConnector({
-		// 	url: UPLOADTRANSACTIONS_API, // Endpoint where the file is uploaded
-		// 	method: "POST",
-		// 	headers: {
-		// 		"Content-Type": "multipart/form-data", // Important to set for file uploads
-		// 	},
-		// 	bodyData: formData, // Sending the formData
-		// });
+		console.log("res in uploadTransaction", res);
 
-		// console.log("res in uploadTransaction", res);
-
-		// notification.success({
-		// 	message: "Transactions Uploaded Successfully",
-		// 	description: `${res.data.successCount} transactions were added successfully.`,
-		// 	duration: 3,
-		// });
+		notification.success({
+			message: "Transactions Uploaded Successfully",
+			description: `${res.data.successCount} transactions were added successfully.`,
+			duration: 3,
+		});
 
 		// return res.data;
 	} catch (error) {

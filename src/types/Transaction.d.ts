@@ -26,12 +26,18 @@ export interface TransactionOutput {
 	amountInINR: number;
 }
 
-export interface dataSourceType {
-	key: UUID;
+export interface AntUiTransaction extends TransactionOutput {
 	id: UUID;
-	date: string;
-	description: string;
-	amount: number;
-	currency: string;
-	amountInINR: number;
+    key: UUID;
 }
+
+
+// export interface dataSourceType {
+// 	key: UUID;
+// 	id: UUID;
+// 	date: string;
+// 	description: string;
+// 	amount: number;
+// 	currency: string;
+// 	amountInINR: number;
+// }

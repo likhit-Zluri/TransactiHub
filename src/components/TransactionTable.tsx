@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "primereact/button";
 import { Checkbox, Modal, notification, Table } from "antd";
 import { UUID } from "crypto";
-import { TransactionFromDB } from "../types/Transaction";
+import { AntUiTransaction, TransactionFromDB } from "../types/Transaction";
 import {
 	getPaginatedTransactions,
 	deleteTransaction,
@@ -10,7 +10,6 @@ import {
 import AddTransactionModal from "../modals/AddTransactionModal";
 import EditTransactionModal from "../modals/EditTransactionModal";
 import UploadCSVModal from "../modals/UploadCSVmodal";
-import { dataSourceType } from "../types/Transaction";
 
 const TransactionTable: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
@@ -24,7 +23,7 @@ const TransactionTable: React.FC = () => {
 	const [editTransactionModal, setEditTransactionModal] = useState(false); // Add state for Edit Modal
 	const [uploadCSVModal, setUploadCSVModal] = useState(false);
 	const [editingTransaction, setEditingTransaction] =
-		useState<dataSourceType>();
+		useState<TransactionFromDB>();
 
 	// const [editingTransaction, setEditingTransaction] = useState<
 	// 	dataSourceType | undefined
@@ -135,18 +134,18 @@ const TransactionTable: React.FC = () => {
 		setUploadCSVModal(true); // Open Upload CSV Modal
 	};
 
-	const dataSource: dataSourceType[] = transactionsList.map((transaction) => ({
-		key: transaction.id,
-		id: transaction.id,
-		date: transaction.date,
-		description:
-			transaction.description.length > 50
-				? `${transaction.description.substring(0, 50)}...`
-				: transaction.description,
-		amount: transaction.amount / 100,
-		currency: transaction.currency,
-		amountInINR: transaction.amountInINR / 100,
-	}));
+	// const dataSource: dataSourceType[] = transactionsList.map((transaction) => ({
+	// 	key: transaction.id,
+	// 	id: transaction.id,
+	// 	date: transaction.date,
+	// 	description:
+	// 		transaction.description.length > 50
+	// 			? `${transaction.description.substring(0, 50)}...`
+	// 			: transaction.description,
+	// 	amount: transaction.amount / 100,
+	// 	currency: transaction.currency,
+	// 	amountInINR: transaction.amountInINR / 100,
+	// }));
 
 	const columns = [
 		{
@@ -191,7 +190,7 @@ const TransactionTable: React.FC = () => {
 		{
 			title: "Actions",
 			key: "actions",
-			render: (_: unknown, record: dataSourceType, index: number) => (
+			render: (_: unknown, record: AntUiTransaction, index: number) => (
 				<div className="flex space-x-2">
 					<Button
 						type="button"
@@ -242,7 +241,18 @@ const TransactionTable: React.FC = () => {
 					</div>
 				) : (
 					<Table
-						dataSource={dataSource}
+						dataSource={transactionsList.map((transaction) => ({
+							key: transaction.id,
+							id: transaction.id,
+							date: transaction.date,
+							description:
+								transaction.description.length > 50
+									? `${transaction.description.substring(0, 50)}...`
+									: transaction.description,
+							amount: transaction.amount / 100,
+							currency: transaction.currency,
+							amountInINR: transaction.amountInINR / 100,
+						}))}
 						columns={columns}
 						pagination={{
 							position: ["topCenter", "bottomCenter"],
@@ -279,7 +289,7 @@ const TransactionTable: React.FC = () => {
 			)}
 
 			{/* Edit Transaction Modal */}
-			{editTransactionModal && (
+			{editTransactionModal && editingTransaction != undefined && (
 				<EditTransactionModal
 					setEditTransactionModal={setEditTransactionModal}
 					onTransactionUpdated={handleTransactionEdited}

@@ -1,16 +1,8 @@
 // EditTransactionModal.tsx
 import React, { useState } from "react";
-import {
-	Modal,
-	Button,
-	Input,
-	Select,
-	InputNumber,
-	notification,
-	Form,
-} from "antd";
+import { Modal, Button, Input, Select, InputNumber, Form } from "antd";
 import { editTransaction } from "../services/operations/transactionsAPI";
-import { dataSourceType, TransactionFromDB } from "../types/Transaction";
+import { TransactionFromDB } from "../types/Transaction";
 import { UUID } from "crypto";
 import { dateFormatter } from "../utils/dateFormatter";
 
@@ -22,7 +14,6 @@ const currencyOptions = [
 ];
 
 interface FormDataInterface {
-	key: UUID;
 	id: UUID;
 	description: string;
 	amount: number;
@@ -33,7 +24,7 @@ interface FormDataInterface {
 interface EditTransactionModalProps {
 	setEditTransactionModal: (value: boolean) => void;
 	onTransactionUpdated: (transaction: TransactionFromDB) => void;
-	transactionToEdit: dataSourceType;
+	transactionToEdit: TransactionFromDB;
 }
 
 const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
@@ -43,6 +34,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 }) => {
 	const [formData, setFormData] = useState<FormDataInterface>({
 		...transactionToEdit,
+		amount: transactionToEdit.amount / 100,
 		date: dateFormatter(transactionToEdit.date),
 	});
 	const [errorMessages, setErrorMessages] = useState<string[]>([]);
@@ -77,8 +69,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 		setLoading(true);
 		try {
-			const { key, ...rest } = formData;
-			void key; // telling ts that key is explicitly being unused
+			const { ...rest } = formData;
 			const updatedFormData = {
 				...formData,
 				date: dateFormatter(formData.date),
@@ -88,22 +79,18 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 			const response = await editTransaction(updatedFormData);
 
 			const editedTransaction: TransactionFromDB = response.data.transaction;
-			console.log("editedTransaction",editedTransaction);
+			console.log("editedTransaction", editedTransaction);
 
 			// const updatedDataSourceType: dataSourceType = {
 			// 	key: editedTransaction.id,
 			// 	...editedTransaction,
 			// };
-            // console.log("updatedDataSourceType",updatedDataSourceType)
+			// console.log("updatedDataSourceType",updatedDataSourceType)
 			onTransactionUpdated(editedTransaction);
 
 			setEditTransactionModal(false);
 		} catch (error) {
 			console.error("Error editing transaction:", error);
-			notification.error({
-				message: "Error",
-				description: "An error occurred while processing the transaction.",
-			});
 		} finally {
 			setLoading(false);
 		}
@@ -117,7 +104,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 		<Modal
 			title="Edit Transaction"
 			open={true}
-			onCancel={() => setEditTransactionModal(false)}
+			onCancel={handleClose}
 			footer={false}
 		>
 			<Form layout="vertical" initialValues={formData} onFinish={handleSave}>

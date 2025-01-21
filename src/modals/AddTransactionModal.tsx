@@ -1,14 +1,6 @@
 // AddTransactionModal.tsx
 import React, { useState } from "react";
-import {
-	Modal,
-	Button,
-	Input,
-	Select,
-	InputNumber,
-	notification,
-	Form,
-} from "antd";
+import { Modal, Button, Input, Select, InputNumber, Form } from "antd";
 import { addTransaction } from "../services/operations/transactionsAPI";
 import { TransactionFromDB, TransactionInput } from "../types/Transaction";
 import { dateFormatter } from "../utils/dateFormatter";
@@ -18,14 +10,6 @@ const currencyOptions = [
 	{ label: "INR", value: "INR" },
 	{ label: "GBP", value: "GBP" },
 ];
-
-// interface FormDataInterface {
-// 	key: string;
-// 	description: string;
-// 	amount: number;
-// 	date: string;
-// 	currency: string;
-// }
 
 interface AddTransactionModalProps {
 	setAddTransactionModal: (value: boolean) => void;
@@ -91,10 +75,6 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 			setAddTransactionModal(false);
 		} catch (error) {
 			console.error("Error adding transaction:", error);
-			notification.error({
-				message: "Error",
-				description: "An error occurred while processing the transaction.",
-			});
 		} finally {
 			setLoading(false);
 		}
@@ -108,7 +88,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 		<Modal
 			title="Add Transaction"
 			open={true}
-			onCancel={() => setAddTransactionModal(false)}
+			onCancel={handleClose}
 			footer={false}
 		>
 			<Form layout="vertical" initialValues={formData} onFinish={handleSave}>
