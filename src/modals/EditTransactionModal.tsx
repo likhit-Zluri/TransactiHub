@@ -1,4 +1,4 @@
-// AddTransactionModal.tsx
+// EditTransactionModal.tsx
 import React, { useState } from "react";
 import {
 	Modal,
@@ -9,9 +9,11 @@ import {
 	notification,
 	Form,
 } from "antd";
-import { addTransaction } from "../services/operations/transactionsAPI";
-import { TransactionFromDB, TransactionInput } from "../types/Transaction";
+import { editTransaction } from "../services/operations/transactionsAPI";
+import { dataSourceType, TransactionFromDB } from "../types/Transaction";
+import { UUID } from "crypto";
 import { dateFormatter } from "../utils/dateFormatter";
+
 const currencyOptions = [
 	{ label: "USD", value: "USD" },
 	{ label: "EUR", value: "EUR" },
@@ -19,30 +21,30 @@ const currencyOptions = [
 	{ label: "GBP", value: "GBP" },
 ];
 
-// interface FormDataInterface {
-// 	key: string;
-// 	description: string;
-// 	amount: number;
-// 	date: string;
-// 	currency: string;
-// }
-
-interface AddTransactionModalProps {
-	setAddTransactionModal: (value: boolean) => void;
-	onTransactionAdded: (transaction: TransactionFromDB) => void;
+interface FormDataInterface {
+	key: UUID;
+	id: UUID;
+	description: string;
+	amount: number;
+	date: string;
+	currency: string;
 }
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
-	setAddTransactionModal,
-	onTransactionAdded,
-}) => {
-	const [formData, setFormData] = useState<TransactionInput>({
-		description: "",
-		amount: 0,
-		date: "",
-		currency: currencyOptions[0].value,
-	});
+interface EditTransactionModalProps {
+	setEditTransactionModal: (value: boolean) => void;
+	onTransactionUpdated: (transaction: TransactionFromDB) => void;
+	transactionToEdit: dataSourceType;
+}
 
+const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
+	setEditTransactionModal,
+	onTransactionUpdated,
+	transactionToEdit,
+}) => {
+	const [formData, setFormData] = useState<FormDataInterface>({
+		...transactionToEdit,
+		date: dateFormatter(transactionToEdit.date),
+	});
 	const [errorMessages, setErrorMessages] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
 
@@ -75,22 +77,29 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
 		setLoading(true);
 		try {
+			const { key, ...rest } = formData;
+			void key; // telling ts that key is explicitly being unused
 			const updatedFormData = {
 				...formData,
 				date: dateFormatter(formData.date),
 			};
+			console.log("formdata", rest);
 
-			console.log("updatedFormData", updatedFormData);
+			const response = await editTransaction(updatedFormData);
 
-			const response = await addTransaction(updatedFormData);
+			const editedTransaction: TransactionFromDB = response.data.transaction;
+			console.log("editedTransaction",editedTransaction);
 
-			const addedTransaction = response.data.transaction;
-			console.log("addedTransaction", addedTransaction);
+			// const updatedDataSourceType: dataSourceType = {
+			// 	key: editedTransaction.id,
+			// 	...editedTransaction,
+			// };
+            // console.log("updatedDataSourceType",updatedDataSourceType)
+			onTransactionUpdated(editedTransaction);
 
-			onTransactionAdded(addedTransaction);
-			setAddTransactionModal(false);
+			setEditTransactionModal(false);
 		} catch (error) {
-			console.error("Error adding transaction:", error);
+			console.error("Error editing transaction:", error);
 			notification.error({
 				message: "Error",
 				description: "An error occurred while processing the transaction.",
@@ -101,14 +110,14 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 	};
 
 	const handleClose = async () => {
-		setAddTransactionModal(false);
+		setEditTransactionModal(false);
 	};
 
 	return (
 		<Modal
-			title="Add Transaction"
+			title="Edit Transaction"
 			open={true}
-			onCancel={() => setAddTransactionModal(false)}
+			onCancel={() => setEditTransactionModal(false)}
 			footer={false}
 		>
 			<Form layout="vertical" initialValues={formData} onFinish={handleSave}>
@@ -190,7 +199,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 							loading={loading}
 							className="ml-2"
 						>
-							Save
+							Save Changes
 						</Button>
 					</div>
 				</Form.Item>
@@ -199,4 +208,4 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 	);
 };
 
-export default AddTransactionModal;
+export default EditTransactionModal;

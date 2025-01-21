@@ -1,73 +1,57 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "primereact/button";
-import { Modal, notification } from "antd";
-
-import { TransactionInDB } from "../types/Transaction";
-
+import { Checkbox, Modal, notification, Table } from "antd";
+import { UUID } from "crypto";
+import { TransactionFromDB } from "../types/Transaction";
 import {
 	getPaginatedTransactions,
 	deleteTransaction,
-	editTransaction,
 } from "../services/operations/transactionsAPI";
-
-import { UUID } from "crypto";
-
 import AddTransactionModal from "../modals/AddTransactionModal";
+import EditTransactionModal from "../modals/EditTransactionModal";
 import UploadCSVModal from "../modals/UploadCSVmodal";
+import { dataSourceType } from "../types/Transaction";
 
 const TransactionTable: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
-	const [limit, setLimit] = useState(10); // Default to 10
-
+	const [pageSize, SetPageSize] = useState(10); // Default to 10
 	const [loading, setLoading] = useState(false);
-
-	const [transactionsList, setTransactionsList] = useState<TransactionInDB[]>(
+	const [transactionsList, setTransactionsList] = useState<TransactionFromDB[]>(
 		[]
 	);
 	const [totalTransactions, setTotalTransactions] = useState(0);
-
 	const [addTransactionModal, setAddTransactionModal] = useState(false);
+	const [editTransactionModal, setEditTransactionModal] = useState(false); // Add state for Edit Modal
 	const [uploadCSVModal, setUploadCSVModal] = useState(false);
 	const [editingTransaction, setEditingTransaction] =
-		useState<TransactionInDB | null>(null);
+		useState<dataSourceType>();
 
-	const totalPages = Math.ceil(totalTransactions / limit);
+	// const [editingTransaction, setEditingTransaction] = useState<
+	// 	dataSourceType | undefined
+	// >(undefined);
 
-	// Get paginated Transactions
+	// const totalPages = Math.ceil(totalTransactions / pageSize);
+
 	useEffect(() => {
 		const fetchTransactions = async () => {
 			setLoading(true);
 			try {
-				const response = await getPaginatedTransactions(currentPage, limit);
-				setTransactionsList(response.data.transactions);
-				setTotalTransactions(response.data.totalCount);
+				const response = await getPaginatedTransactions(currentPage, pageSize);
 
-				if (response.success === true) {
-					notification.success({
-						message: "Fetched Transactions",
-						description: "Transactions have been successfully loaded.",
-					});
-				} else if (response.success === false) {
-					notification.error({
-						message: "Error Fetching Transactions",
-						description: "An error occurred while fetching the transactions.",
-					});
+				if (response && response.status !== 204) {
+					setTransactionsList(response.data.transactions);
+					setTotalTransactions(response.data.totalCount);
 				}
 			} catch (error) {
 				console.error("Error fetching transactions:", error);
-				notification.error({
-					message: "Error",
-					description: "An error occurred while fetching the transactions.",
-				});
 			} finally {
 				setLoading(false);
 			}
 		};
 
 		fetchTransactions();
-	}, [currentPage, limit]);
+	}, [currentPage, pageSize]);
 
-	// Handle delete button click
 	const handleDelete = async (transactionId: UUID) => {
 		Modal.confirm({
 			title: "Are you sure you want to delete this transaction?",
@@ -75,11 +59,9 @@ const TransactionTable: React.FC = () => {
 				try {
 					const res = await deleteTransaction(transactionId);
 					console.log("res in handleDelete", res);
-					// If successful, filter out the deleted transaction from the list
 					setTransactionsList((prevList) =>
 						prevList.filter((transaction) => transaction.id !== transactionId)
 					);
-
 					notification.success({
 						message: "Transaction Deleted",
 						description: "The transaction has been deleted successfully.",
@@ -92,77 +74,144 @@ const TransactionTable: React.FC = () => {
 					});
 				}
 			},
-			onCancel() {
-				// Optional: Handle cancel event (nothing to do in this case)
-				console.log("Delete action canceled.");
-			},
 		});
 	};
 
 	const handleAddTransaction = () => {
-		setEditingTransaction(null);
-		setAddTransactionModal(true);
+		setAddTransactionModal(true); // Open Add Transaction Modal
 	};
 
-	// Add or Update Transaction here changes
-	// const handleTransactionAddedOrUpdated = (newTransaction: TransactionInDB) => {
-	// 	console.log("newTransaction", newTransaction);
+	const handleEditTransaction = (transaction: TransactionFromDB) => {
+		console.log("transaction", transaction);
 
-	// 	if (editingTransaction) {
-	// 		// Update the transaction in the list
-	// 		setTransactionsList((prevList) =>
-	// 			prevList.map((transaction) =>
-	// 				transaction.id === newTransaction.id ? newTransaction : transaction
-	// 			)
-	// 		);
-	// 	} else {
-	// 		// Add new transaction to the list
-	// 		setTransactionsList((prevList) => [newTransaction, ...prevList]);
-	// 		setTotalTransactions((prev) => prev + 1);
-	// 	}
-	// 	setAddTransactionModal(false); // Close the modal
-	// };
+		setEditingTransaction(transaction); // Set the transaction to be edited
+		setEditTransactionModal(true); // Open Edit Transaction Modal
+	};
 
-	const handleTransactionAddedOrUpdated = (newTransaction: TransactionInDB) => {
-		console.log("newTransaction", newTransaction);
-
+	const handleTransactionAdded = (newTransaction: TransactionFromDB) => {
 		setTransactionsList((prevList) => {
-			const updatedList = editingTransaction
-				? prevList.map((transaction) =>
-						transaction.id === newTransaction.id ? newTransaction : transaction
-				  )
-				: [newTransaction, ...prevList];
+			// Add the new transaction
+			const updatedList = [...prevList, newTransaction];
 
-			// Sort the transactions in descending order by date
-			return updatedList.sort(
+			// Sort transactions by date (most recent first)
+			updatedList.sort(
 				(a, b) =>
-					new Date(b.date.split("-").reverse().join("-")).getTime() -
-					new Date(a.date.split("-").reverse().join("-")).getTime()
+					new Date(b.parsedDate).getTime() - new Date(a.parsedDate).getTime()
 			);
+
+			// Check if the number of transactions exceeds the pageSize
+			if (updatedList.length > pageSize) {
+				// If so, slice the list to only keep the latest `pageSize` transactions
+				return updatedList.slice(0, pageSize);
+			}
+
+			return updatedList;
+		});
+		setAddTransactionModal(false); // Close the modal after adding the transaction
+	};
+
+	const handleTransactionEdited = (updatedTransaction: TransactionFromDB) => {
+		setTransactionsList((prevList) => {
+			// Update the transaction in the list
+			const updatedList = prevList.map((transaction) =>
+				transaction.id === updatedTransaction.id
+					? updatedTransaction
+					: transaction
+			);
+
+			// Sort transactions by date (most recent first)
+			updatedList.sort(
+				(a, b) =>
+					new Date(b.parsedDate).getTime() - new Date(a.parsedDate).getTime()
+			);
+
+			return updatedList;
 		});
 
-		if (!editingTransaction) {
-			setTotalTransactions((prev) => prev + 1);
-		}
-
-		setAddTransactionModal(false); // Close the modal
-	};
-
-	// Edit Transaction - Sets the transaction to be edited
-	const handleEditTransaction = (transaction: TransactionInDB) => {
-		console.log("transaction in handleEditTransaction", transaction);
-		setEditingTransaction(transaction); // Set the transaction to be edited
-		console.log(
-			"editingTransaction in handleEditTransaction",
-			editingTransaction
-		);
-		setAddTransactionModal(true); // Open modal for editing
+		setAddTransactionModal(false); // Close the modal after editing the transaction
 	};
 
 	const handleCSVUpload = () => {
-		console.log("handleCSVUpload");
-		setUploadCSVModal(true);
+		setUploadCSVModal(true); // Open Upload CSV Modal
 	};
+
+	const dataSource: dataSourceType[] = transactionsList.map((transaction) => ({
+		key: transaction.id,
+		id: transaction.id,
+		date: transaction.date,
+		description:
+			transaction.description.length > 50
+				? `${transaction.description.substring(0, 50)}...`
+				: transaction.description,
+		amount: transaction.amount / 100,
+		currency: transaction.currency,
+		amountInINR: transaction.amountInINR / 100,
+	}));
+
+	const columns = [
+		{
+			title: <Checkbox />, // Header checkbox
+			dataIndex: "checkbox",
+			key: "checkbox",
+			render: () => <Checkbox />, // Render a checkbox in each row
+			width: 50,
+		},
+		{
+			title: "Date",
+			dataIndex: "date",
+			key: "date",
+			width: 120,
+		},
+		{
+			title: "Transaction Description",
+			dataIndex: "description",
+			key: "description",
+			width: 300,
+		},
+		{
+			title: "Amount",
+			dataIndex: "amount",
+			key: "amount",
+			render: (amount: string) => `${amount}`,
+			width: 150,
+		},
+		{
+			title: "Currency",
+			dataIndex: "currency",
+			key: "currency",
+			width: 120,
+		},
+		{
+			title: "Amount in INR",
+			dataIndex: "amountInINR",
+			key: "amountInINR",
+			render: (amountInINR: string) => `₹${amountInINR}`,
+			width: 150,
+		},
+		{
+			title: "Actions",
+			key: "actions",
+			render: (_: unknown, record: dataSourceType, index: number) => (
+				<div className="flex space-x-2">
+					<Button
+						type="button"
+						className="text-blue-500"
+						onClick={() => handleEditTransaction(transactionsList[index])}
+					>
+						Edit
+					</Button>
+					<Button
+						type="button"
+						className="text-red-500"
+						onClick={() => handleDelete(record.id)}
+					>
+						Delete
+					</Button>
+				</div>
+			),
+			width: 150,
+		},
+	];
 
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
@@ -176,13 +225,13 @@ const TransactionTable: React.FC = () => {
 							icon="pi pi-upload"
 							className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
 							onClick={handleCSVUpload} // Open the dialog
-						></Button>
+						/>
 						<Button
 							label="Add Transaction"
 							icon="pi pi-plus"
 							className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
 							onClick={handleAddTransaction} // Open the dialog
-						></Button>
+						/>
 					</div>
 				</div>
 
@@ -192,137 +241,53 @@ const TransactionTable: React.FC = () => {
 						<div className="animate-spin rounded-full border-t-4 border-blue-500 h-12 w-12"></div>
 					</div>
 				) : (
-					// Table
-					<div className="overflow-x-auto">
-						<table className="min-w-full text-sm text-left text-gray-700 border border-gray-200">
-							<thead className="bg-gray-100 text-gray-600 uppercase">
-								<tr>
-									<th className="p-3 border border-gray-200 w-[50px] min-w-[50px]">
-										<input type="checkbox" className="rounded" />
-									</th>
-									<th className="p-3 border border-gray-200 w-[120px] min-w-[100px]">
-										Date
-									</th>
-									<th className="p-3 border border-gray-200 w-[300px] min-w-[200px]">
-										Transaction Description
-									</th>
-									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
-										Amount
-									</th>
-									<th className="p-3 border border-gray-200 w-[120px] min-w-[100px]">
-										Currency
-									</th>
-									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
-										Amount in INR
-									</th>
-									<th className="p-3 border border-gray-200 w-[150px] min-w-[120px]">
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{transactionsList.map((transaction, index) => (
-									<tr
-										key={transaction.id}
-										className={`${
-											index % 2 === 0 ? "bg-gray-50" : "bg-white"
-										} hover:bg-gray-100 transition`}
-									>
-										<td className="p-3 border border-gray-200">
-											<input type="checkbox" className="rounded" />
-										</td>
-										<td className="p-3 border border-gray-200">
-											{transaction.date}
-										</td>
-										<td className="p-3 border border-gray-200">
-											{transaction.description.length > 50
-												? `${transaction.description.substring(0, 50)}...`
-												: transaction.description}
-										</td>
-										<td className="p-3 border border-gray-200">
-											{Number(transaction.amount) / 100}
-										</td>
-										<td className="p-3 border border-gray-200">
-											{transaction.currency}
-										</td>
-										<td className="p-3 border border-gray-200">
-											{Number(transaction.amountInINR) / 100}
-										</td>
-										<td className="p-3 border border-gray-200 flex space-x-2">
-											<button
-												className="text-blue-500 hover:underline"
-												onClick={() => handleEditTransaction(transaction)}
-											>
-												Edit
-											</button>
-											<button
-												className="text-red-500 hover:underline"
-												onClick={() => handleDelete(transaction.id)}
-											>
-												Delete
-											</button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<Table
+						dataSource={dataSource}
+						columns={columns}
+						pagination={{
+							position: ["topCenter", "bottomCenter"],
+							current: currentPage, // The current page
+							pageSize: pageSize, // The current page size
+							total: totalTransactions, // Total number of transactions
+							showSizeChanger: true, // Allow page size changer
+							pageSizeOptions: ["10", "20", "30"], // Available page sizes
+							onChange: (page, pageSize) => {
+								console.log("pagination", page, pageSize);
+								setCurrentPage(page); // Update the current page
+								SetPageSize(pageSize); // Update the page size
+							},
+						}}
+						locale={{
+							emptyText: "No transactions available.",
+						}}
+						scroll={{ x: "1000px" }}
+					/>
 				)}
 
 				{/* Pagination */}
 				<div className="flex justify-between items-center mt-6">
-					<div>
-						<label className="text-sm text-gray-600 mr-2">Rows per page:</label>
-						<select
-							value={limit}
-							onChange={(e) => setLimit(Number(e.target.value))}
-							className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-						>
-							{[10, 25, 50].map((value) => (
-								<option key={value} value={value}>
-									{value}
-								</option>
-							))}
-						</select>
-					</div>
-					<div className="text-sm text-gray-600">
-						Page {currentPage} of {totalPages}
-					</div>
-					<div className="flex space-x-2">
-						<button
-							onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-							disabled={currentPage === 1}
-							className={`text-blue-500 hover:text-blue-700 transition ${
-								currentPage === 1 && "opacity-50 cursor-not-allowed"
-							}`}
-						>
-							Prev
-						</button>
-						<button
-							onClick={() =>
-								setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-							}
-							disabled={currentPage === totalPages}
-							className={`text-blue-500 hover:text-blue-700 transition ${
-								currentPage === totalPages && "opacity-50 cursor-not-allowed"
-							}`}
-						>
-							Next
-						</button>
-					</div>
+					{totalTransactions}
 				</div>
 			</div>
 
-			{/* Add/Edit Transaction Dialog */}
+			{/* Add Transaction Modal */}
 			{addTransactionModal && (
 				<AddTransactionModal
 					setAddTransactionModal={setAddTransactionModal}
-					onTransactionAdded={handleTransactionAddedOrUpdated}
-					transactionToEdit={editingTransaction} // Pass the editing transaction
+					onTransactionAdded={handleTransactionAdded}
 				/>
 			)}
 
-			{/* Upload CSV Dialog */}
+			{/* Edit Transaction Modal */}
+			{editTransactionModal && (
+				<EditTransactionModal
+					setEditTransactionModal={setEditTransactionModal}
+					onTransactionUpdated={handleTransactionEdited}
+					transactionToEdit={editingTransaction}
+				/>
+			)}
+
+			{/* Upload CSV Modal */}
 			{uploadCSVModal && (
 				<UploadCSVModal setUploadCSVModal={setUploadCSVModal} />
 			)}
