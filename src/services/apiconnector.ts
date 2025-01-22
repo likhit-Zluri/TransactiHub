@@ -2,7 +2,8 @@ import axios, { AxiosRequestConfig, Method } from "axios";
 
 // Create an axios instance
 export const axiosInstance = axios.create({
-	baseURL: import.meta.env.VITE_BASE_URL,
+	// baseURL: "http://localhost:3000/api",
+	baseURL: "https://transactihub-bd.onrender.com/api",
 });
 // export const axiosInstance = axios.create();
 

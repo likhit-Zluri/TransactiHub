@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "primereact/button";
 import { Checkbox, Modal, notification, Table } from "antd";
-import { UUID } from "crypto";
-import { AntUiTransaction, TransactionFromDB } from "../types/Transaction";
+
+import {
+	AntUiTransaction,
+	TransactionFromDB,
+	UUID,
+} from "../types/Transaction";
 import {
 	getPaginatedTransactions,
 	deleteTransaction,
@@ -41,8 +45,6 @@ const TransactionTable: React.FC = () => {
 					setTransactionsList(response.data.transactions);
 					setTotalTransactions(response.data.totalCount);
 				}
-			} catch (error) {
-				console.error("Error fetching transactions:", error);
 			} finally {
 				setLoading(false);
 			}
@@ -55,23 +57,15 @@ const TransactionTable: React.FC = () => {
 		Modal.confirm({
 			title: "Are you sure you want to delete this transaction?",
 			onOk: async () => {
-				try {
-					const res = await deleteTransaction(transactionId);
-					console.log("res in handleDelete", res);
-					setTransactionsList((prevList) =>
-						prevList.filter((transaction) => transaction.id !== transactionId)
-					);
-					notification.success({
-						message: "Transaction Deleted",
-						description: "The transaction has been deleted successfully.",
-					});
-				} catch (error) {
-					console.error("Error deleting transaction:", error);
-					notification.error({
-						message: "Error Deleting Transaction",
-						description: "An error occurred while deleting the transaction.",
-					});
-				}
+				const res = await deleteTransaction(transactionId);
+				console.log("res in handleDelete", res);
+				setTransactionsList((prevList) =>
+					prevList.filter((transaction) => transaction.id !== transactionId)
+				);
+				notification.success({
+					message: "Transaction Deleted",
+					description: "The transaction has been deleted successfully.",
+				});
 			},
 		});
 	};
@@ -88,6 +82,8 @@ const TransactionTable: React.FC = () => {
 	};
 
 	const handleTransactionAdded = (newTransaction: TransactionFromDB) => {
+		console.log("in handleTransactionAdded");
+
 		setTransactionsList((prevList) => {
 			// Add the new transaction
 			const updatedList = [...prevList, newTransaction];
@@ -134,58 +130,80 @@ const TransactionTable: React.FC = () => {
 		setUploadCSVModal(true); // Open Upload CSV Modal
 	};
 
-	// const dataSource: dataSourceType[] = transactionsList.map((transaction) => ({
-	// 	key: transaction.id,
-	// 	id: transaction.id,
-	// 	date: transaction.date,
-	// 	description:
-	// 		transaction.description.length > 50
-	// 			? `${transaction.description.substring(0, 50)}...`
-	// 			: transaction.description,
-	// 	amount: transaction.amount / 100,
-	// 	currency: transaction.currency,
-	// 	amountInINR: transaction.amountInINR / 100,
-	// }));
-
 	const columns = [
 		{
 			title: <Checkbox />, // Header checkbox
 			dataIndex: "checkbox",
 			key: "checkbox",
 			render: () => <Checkbox />, // Render a checkbox in each row
-			width: 50,
+			width: 1,
 		},
 		{
 			title: "Date",
 			dataIndex: "date",
 			key: "date",
-			width: 120,
+			width: 90,
 		},
 		{
 			title: "Transaction Description",
 			dataIndex: "description",
 			key: "description",
 			width: 300,
+			render: (text: string) => {
+				// Substring the description to the first 50 characters
+				const truncatedText =
+					text.length > 50 ? `${text.substring(0, 47)}...` : text;
+
+				const handleCopy = (description: string) => {
+					navigator.clipboard
+						.writeText(description)
+						.then(() => {
+							notification.success({
+								message: "Copied!",
+								description:
+									"The transaction description has been copied to your clipboard.",
+							});
+						})
+						.catch(() => {
+							notification.error({
+								message: "Copy Failed",
+								description: "Failed to copy the description.",
+							});
+						});
+				};
+
+				return (
+					<div className="relative group cursor-pointer">
+						<span
+							className="block truncate group-hover:truncate-none group-hover:whitespace-normal group-hover:overflow-visible"
+							title={text} // Full description as tooltip on hover
+							onDoubleClick={() => handleCopy(text)} // Trigger copy on double-click
+						>
+							{truncatedText}
+						</span>
+					</div>
+				);
+			},
 		},
 		{
 			title: "Amount",
 			dataIndex: "amount",
 			key: "amount",
 			render: (amount: string) => `${amount}`,
-			width: 150,
+			width: 1,
 		},
 		{
 			title: "Currency",
 			dataIndex: "currency",
 			key: "currency",
-			width: 120,
+			width: 1,
 		},
 		{
 			title: "Amount in INR",
 			dataIndex: "amountInINR",
 			key: "amountInINR",
 			render: (amountInINR: string) => `₹${amountInINR}`,
-			width: 150,
+			width: 102,
 		},
 		{
 			title: "Actions",
@@ -208,7 +226,7 @@ const TransactionTable: React.FC = () => {
 					</Button>
 				</div>
 			),
-			width: 150,
+			width: 1,
 		},
 	];
 
@@ -220,24 +238,32 @@ const TransactionTable: React.FC = () => {
 					<h1 className="text-2xl font-semibold text-gray-700">Transactions</h1>
 					<div className="flex space-x-4">
 						<Button
+							type="button"
 							label="Upload CSV"
 							icon="pi pi-upload"
 							className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
 							onClick={handleCSVUpload} // Open the dialog
 						/>
 						<Button
-							label="Add Transaction"
+							type="button"
 							icon="pi pi-plus"
+							aria-label="Add Transaction"
 							className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
 							onClick={handleAddTransaction} // Open the dialog
-						/>
+						>
+							Add Transaction
+						</Button>
 					</div>
 				</div>
 
 				{/* Loading Screen */}
 				{loading ? (
-					<div className="flex justify-center items-center min-h-screen">
-						<div className="animate-spin rounded-full border-t-4 border-blue-500 h-12 w-12"></div>
+					<div className="flex flex-col justify-center items-center min-h-screen">
+						<div className="mb-4">Loading...</div>
+						<div
+							className="animate-spin rounded-full border-t-4 border-blue-500 h-12 w-12"
+							// role="status"
+						></div>
 					</div>
 				) : (
 					<Table
@@ -246,9 +272,10 @@ const TransactionTable: React.FC = () => {
 							id: transaction.id,
 							date: transaction.date,
 							description:
-								transaction.description.length > 50
-									? `${transaction.description.substring(0, 50)}...`
-									: transaction.description,
+								// transaction.description.length > 47
+								// 	? `${transaction.description.substring(0, 47)}...`
+								// 	:
+								transaction.description,
 							amount: transaction.amount / 100,
 							currency: transaction.currency,
 							amountInINR: transaction.amountInINR / 100,
@@ -271,13 +298,16 @@ const TransactionTable: React.FC = () => {
 							emptyText: "No transactions available.",
 						}}
 						scroll={{ x: "1000px" }}
+						rowClassName={() => {
+							return "h-[60px] overflow-hidden"; // Apply Tailwind classes directly here
+						}}
 					/>
 				)}
 
 				{/* Pagination */}
-				<div className="flex justify-between items-center mt-6">
+				{/* <div className="flex justify-between items-center mt-6">
 					{totalTransactions}
-				</div>
+				</div> */}
 			</div>
 
 			{/* Add Transaction Modal */}

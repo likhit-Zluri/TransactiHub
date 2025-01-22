@@ -1,10 +1,10 @@
 import { transactionEndpoints } from "../api";
 import { TransactionInput } from "../../types/Transaction";
 import { apiConnector } from "../apiconnector";
-import { UUID } from "crypto";
-
+import { UUID } from "../../types/Transaction";
 import { notification } from "antd";
 import { AxiosError } from "axios";
+import { generateCsvForErrors } from "../../utils/generateCSVForErrors";
 
 const {
 	ADDTRANSACTION_API,
@@ -160,6 +160,17 @@ export async function deleteTransaction(transactionId: UUID) {
 	}
 }
 
+interface ErrorDetail {
+	index: number;
+	msg: string;
+}
+
+interface ErrorResponse {
+	validationErrors: ErrorDetail[];
+	duplicationErrors: ErrorDetail[];
+	existingTransaction: ErrorDetail[];
+}
+
 export async function uploadTransactions(
 	file: File,
 	skipCSVDuplicates: boolean = false
@@ -171,7 +182,7 @@ export async function uploadTransactions(
 		formData.append("skipCSVDuplicates", skipCSVDuplicates.toString());
 
 		const res = await apiConnector({
-			url: UPLOADTRANSACTIONS_API, 
+			url: UPLOADTRANSACTIONS_API,
 			method: "POST",
 			headers: {
 				"Content-Type": "multipart/form-data", // Important to set for file uploads
@@ -190,11 +201,30 @@ export async function uploadTransactions(
 		// return res.data;
 	} catch (error) {
 		if (error instanceof AxiosError && error.response) {
+			const {
+				validationErrors,
+				duplicationErrors,
+				existingTransaction,
+			}: ErrorResponse = error.response.data.errors || {};
+			console.error("Validation Errors:", validationErrors);
+			console.error("Duplication Errors:", duplicationErrors);
+			console.error("Existing Transaction Errors:", existingTransaction);
+
+			// Call the function to generate and download the CSVs in parallel
+			await generateCsvForErrors(
+				validationErrors,
+				duplicationErrors,
+				existingTransaction
+			);
+
+			// Show notification to the user
 			notification.error({
 				message: "Error while Uploading Transactions",
-				description: `${error.response.data.message}`,
+				description: `Some records failed validation, duplication, or already exist in the database. CSV files have been downloaded for each error type.`,
+				duration: 5,
 			});
 		}
+
 		console.error("Error in uploadTransaction:", error);
 	}
 }

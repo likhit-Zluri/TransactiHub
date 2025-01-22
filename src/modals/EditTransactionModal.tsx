@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { Modal, Button, Input, Select, InputNumber, Form } from "antd";
 import { editTransaction } from "../services/operations/transactionsAPI";
-import { TransactionFromDB } from "../types/Transaction";
-import { UUID } from "crypto";
+import { TransactionFromDB, UUID } from "../types/Transaction";
 import { dateFormatter } from "../utils/dateFormatter";
 
 const currencyOptions = [

@@ -22,6 +22,14 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 
 			return Upload.LIST_IGNORE; // Prevents adding the file to the upload list
 		}
+
+		if (file.type !== "text/csv") {
+			notification.error({
+				message: "File size must be of text/csv type.",
+			});
+
+			return Upload.LIST_IGNORE; // Prevents adding the file to the upload list
+		}
 		setFile(file);
 		return false; // Prevents auto upload
 	};
@@ -74,22 +82,24 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 				</Button>,
 			]}
 		>
-			<Upload
-				accept=".csv"
-				beforeUpload={beforeUpload}
-				showUploadList={file ? { showRemoveIcon: true } : false}
-				onRemove={() => setFile(null)}
-				maxCount={1}
-			>
-				<Button icon={<UploadOutlined />}>Select CSV File</Button>
-			</Upload>
-			<Checkbox
-				checked={skipDuplicates}
-				onChange={(e) => setSkipDuplicates(e.target.checked)}
-				style={{ marginTop: 16 }}
-			>
-				Skip duplicate rows
-			</Checkbox>
+			<div className="flex flex-col space-y-4 w-full">
+				<Upload
+					accept=".csv"
+					beforeUpload={beforeUpload}
+					showUploadList={file ? { showRemoveIcon: true } : false}
+					onRemove={() => setFile(null)}
+					maxCount={1}
+				>
+					<Button icon={<UploadOutlined />}>Select CSV File</Button>
+				</Upload>
+
+				<Checkbox
+					checked={skipDuplicates}
+					onChange={(e) => setSkipDuplicates(e.target.checked)}
+				>
+					Skip duplicate rows
+				</Checkbox>
+			</div>
 		</Modal>
 	);
 };

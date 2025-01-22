@@ -1,4 +1,4 @@
-import { UUID } from "crypto";
+export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export interface TransactionInput {
 	date: string;
@@ -28,9 +28,8 @@ export interface TransactionOutput {
 
 export interface AntUiTransaction extends TransactionOutput {
 	id: UUID;
-    key: UUID;
+	key: UUID;
 }
-
 
 // export interface dataSourceType {
 // 	key: UUID;

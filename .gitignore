@@ -78,3 +78,5 @@ tests/
 
 # Logs
 *.log
+
+/notes.md
