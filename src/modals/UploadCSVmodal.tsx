@@ -5,9 +5,11 @@ import { uploadTransactions } from "../services/operations/transactionsAPI";
 
 interface UploadCSVModalProps {
 	setUploadCSVModal: (value: boolean) => void;
+	onCSVUploaded: () => Promise<void>;
 }
 
 const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
+	onCSVUploaded,
 	setUploadCSVModal,
 }) => {
 	const [file, setFile] = useState<File | null>(null);
@@ -47,7 +49,7 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 			// const response = await uploadTransactions(file, skipDuplicates);
 
 			await uploadTransactions(file, skipDuplicates);
-
+			await onCSVUploaded();
 			setFile(null); // Reset file
 			setSkipDuplicates(false); // Reset checkbox
 			handleClose(); // Close the modal

@@ -12,7 +12,7 @@ const {
 	GETPAGINATEDTRANSACTIONS_API,
 	DELETETRANSACTION_API,
 	UPLOADTRANSACTIONS_API,
-	// DELETEALLTRANSACTIONS_API,
+	BULKDELETE_API,
 } = transactionEndpoints;
 
 export async function addTransaction(data: TransactionInput) {
@@ -27,6 +27,7 @@ export async function addTransaction(data: TransactionInput) {
 		});
 
 		console.log("res in addTransaction", res);
+
 		notification.success({
 			message: "Transaction Added succesfully",
 			duration: 2,
@@ -226,5 +227,35 @@ export async function uploadTransactions(
 		}
 
 		console.error("Error in uploadTransaction:", error);
+	}
+}
+
+export async function deleteMultipleTransactions(ids: UUID[]) {
+	try {
+		const res = await apiConnector({
+			url: BULKDELETE_API,
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			bodyData: {ids},
+		});
+
+		console.log("res in deleteTransactions", res);
+
+		notification.success({
+			message: "Transactions Deleted succesfully",
+			duration: 2,
+		});
+
+		return res.data;
+	} catch (error) {
+		if (error instanceof AxiosError && error.response) {
+			notification.error({
+				message: "Error while Deleting transactions",
+				description: `${error.response.data.message}`,
+			});
+		}
+		console.error("Error in deleteTransactions:", error);
 	}
 }

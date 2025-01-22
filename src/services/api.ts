@@ -18,5 +18,5 @@ export const transactionEndpoints = {
 	UPLOADTRANSACTIONS_API: "/transactions/upload",
 
 	// Delete all transactions
-	DELETEALLTRANSACTIONS_API: "/transactions",
+	BULKDELETE_API: "/transactions",
 };

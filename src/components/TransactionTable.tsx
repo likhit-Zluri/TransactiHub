@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "primereact/button";
-import { Checkbox, Modal, notification, Table } from "antd";
+import {
+	AiFillDelete,
+	AiOutlineCloudUpload,
+	AiOutlineEdit,
+	AiOutlineFileAdd,
+} from "react-icons/ai";
+import { Checkbox, Modal, notification, Table, Button } from "antd";
 
 import {
 	AntUiTransaction,
@@ -10,6 +15,7 @@ import {
 import {
 	getPaginatedTransactions,
 	deleteTransaction,
+	deleteMultipleTransactions,
 } from "../services/operations/transactionsAPI";
 import AddTransactionModal from "../modals/AddTransactionModal";
 import EditTransactionModal from "../modals/EditTransactionModal";
@@ -28,6 +34,11 @@ const TransactionTable: React.FC = () => {
 	const [uploadCSVModal, setUploadCSVModal] = useState(false);
 	const [editingTransaction, setEditingTransaction] =
 		useState<TransactionFromDB>();
+	// const [deleting, setDeleting] = useState(false);
+
+	const [headerCheckbox, setHeaderCheckbox] = useState(false);
+
+	const [selectedIds, setSelectedIds] = useState<UUID[]>([]);
 
 	// const [editingTransaction, setEditingTransaction] = useState<
 	// 	dataSourceType | undefined
@@ -35,24 +46,26 @@ const TransactionTable: React.FC = () => {
 
 	// const totalPages = Math.ceil(totalTransactions / pageSize);
 
-	useEffect(() => {
-		const fetchTransactions = async () => {
-			setLoading(true);
-			try {
-				const response = await getPaginatedTransactions(currentPage, pageSize);
-
-				if (response && response.status !== 204) {
-					setTransactionsList(response.data.transactions);
-					setTotalTransactions(response.data.totalCount);
-				}
-			} finally {
-				setLoading(false);
+	// Fetch transactions
+	const fetchTransactions = async () => {
+		setLoading(true);
+		try {
+			const response = await getPaginatedTransactions(currentPage, pageSize);
+			console.log({response})
+			if (response) {
+				setTransactionsList(response.data.transactions);
+				setTotalTransactions(response.data.totalCount);
 			}
-		};
-
+		} finally {
+			setLoading(false);
+		}
+	};
+	useEffect(() => {
 		fetchTransactions();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentPage, pageSize]);
 
+	// Handle single transaction delete
 	const handleDelete = async (transactionId: UUID) => {
 		Modal.confirm({
 			title: "Are you sure you want to delete this transaction?",
@@ -66,6 +79,23 @@ const TransactionTable: React.FC = () => {
 					message: "Transaction Deleted",
 					description: "The transaction has been deleted successfully.",
 				});
+			},
+		});
+	};
+
+	// Handle the action of bulk deleting transactions
+	const handleBulkDelete = () => {
+		Modal.confirm({
+			title: "Are you sure you want to delete the selected transactions?",
+			onOk: async () => {
+				console.log("selectedIds", selectedIds);
+
+				await deleteMultipleTransactions(selectedIds);
+
+				setSelectedIds([]);
+				setHeaderCheckbox(false);
+
+				await fetchTransactions();
 			},
 		});
 	};
@@ -130,12 +160,26 @@ const TransactionTable: React.FC = () => {
 		setUploadCSVModal(true); // Open Upload CSV Modal
 	};
 
+	const handleCSVUploaded = async () => {
+		await fetchTransactions();
+	};
+
 	const columns = [
 		{
-			title: <Checkbox />, // Header checkbox
+			title: (
+				<Checkbox
+					checked={headerCheckbox}
+					onChange={(e) => handleHeaderCheckboxChange(e.target.checked)}
+				/>
+			), // Header checkbox
 			dataIndex: "checkbox",
 			key: "checkbox",
-			render: () => <Checkbox />, // Render a checkbox in each row
+			render: (_: unknown, record: { id: UUID }) => (
+				<Checkbox
+					checked={selectedIds.includes(record.id)}
+					onChange={(e) => handleRowCheckboxChange(record.id, e.target.checked)}
+				/>
+			), // Render a checkbox in each row
 			width: 1,
 		},
 		{
@@ -211,15 +255,17 @@ const TransactionTable: React.FC = () => {
 			render: (_: unknown, record: AntUiTransaction, index: number) => (
 				<div className="flex space-x-2">
 					<Button
-						type="button"
-						className="text-blue-500"
+						type="primary"
+						icon={<AiOutlineEdit />}
+						className="bg-blue-500 hover:bg-blue-600 text-white"
 						onClick={() => handleEditTransaction(transactionsList[index])}
 					>
 						Edit
 					</Button>
 					<Button
-						type="button"
-						className="text-red-500"
+						type="primary"
+						icon={<AiFillDelete />}
+						className="bg-red-500 hover:bg-red-600 text-white"
 						onClick={() => handleDelete(record.id)}
 					>
 						Delete
@@ -230,6 +276,20 @@ const TransactionTable: React.FC = () => {
 		},
 	];
 
+	const handleHeaderCheckboxChange = (checked: boolean) => {
+		setHeaderCheckbox(checked);
+		setSelectedIds(checked ? transactionsList.map((tx) => tx.id) : []);
+	};
+
+	const handleRowCheckboxChange = (id: UUID, checked: boolean) => {
+		console.log("selectedIds", selectedIds);
+
+		setSelectedIds((prev) => {
+			if (checked) return [...prev, id];
+			return prev.filter((selectedId) => selectedId !== id);
+		});
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
@@ -238,18 +298,29 @@ const TransactionTable: React.FC = () => {
 					<h1 className="text-2xl font-semibold text-gray-700">Transactions</h1>
 					<div className="flex space-x-4">
 						<Button
-							type="button"
-							label="Upload CSV"
-							icon="pi pi-upload"
-							className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
-							onClick={handleCSVUpload} // Open the dialog
-						/>
+							type="primary"
+							icon={<AiFillDelete />}
+							danger
+							disabled={selectedIds.length === 0}
+							onClick={() => handleBulkDelete()}
+						>
+							Delete Selected
+						</Button>
+
 						<Button
-							type="button"
-							icon="pi pi-plus"
-							aria-label="Add Transaction"
-							className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
-							onClick={handleAddTransaction} // Open the dialog
+							key="upload"
+							type="primary"
+							icon={<AiOutlineCloudUpload />}
+							onClick={handleCSVUpload}
+							className="bg-green-500 hover:bg-green-600 text-white border-green-500"
+						>
+							Upload CSV
+						</Button>
+						<Button
+							type="primary"
+							icon={<AiOutlineFileAdd />}
+							onClick={handleAddTransaction}
+							className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500"
 						>
 							Add Transaction
 						</Button>
@@ -329,7 +400,10 @@ const TransactionTable: React.FC = () => {
 
 			{/* Upload CSV Modal */}
 			{uploadCSVModal && (
-				<UploadCSVModal setUploadCSVModal={setUploadCSVModal} />
+				<UploadCSVModal
+					setUploadCSVModal={setUploadCSVModal}
+					onCSVUploaded={handleCSVUploaded}
+				/>
 			)}
 		</div>
 	);
