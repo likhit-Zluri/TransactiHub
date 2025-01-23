@@ -30,13 +30,3 @@ export interface AntUiTransaction extends TransactionOutput {
 	id: UUID;
 	key: UUID;
 }
-
-// export interface dataSourceType {
-// 	key: UUID;
-// 	id: UUID;
-// 	date: string;
-// 	description: string;
-// 	amount: number;
-// 	currency: string;
-// 	amountInINR: number;
-// }

@@ -163,7 +163,12 @@ interface FormDataInterface {
 	date: string;
 	currency: string;
 }
-
+// interface ErrorInterface {
+// 	description: string;
+// 	amount: string;
+// 	date: string;
+// 	currency: string;
+// }
 interface EditTransactionModalProps {
 	setAddTransactionModal: (value: boolean) => void;
 	onTransactionAdded: () => void;
@@ -179,37 +184,104 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 		date: "",
 		currency: currencyOptions[0].value,
 	});
-	const [errorMessages, setErrorMessages] = useState<string[]>([]);
+	const [errors, setErrors] = useState<{
+		description?: string;
+		amount?: string;
+		date?: string;
+		currency?: string;
+	}>({});
+
 	const [loading, setLoading] = useState(false);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		console.log("value", e.target.value);
-		setFormData({ ...formData, [e.target.name]: e.target.value });
+		const { name, value } = e.target;
+
+		if (name === "date") {
+			const selectedDate = new Date(value);
+			const today = new Date();
+			today.setHours(0, 0, 0, 0); // Normalize time for accurate comparison
+
+			console.log("date", value, selectedDate);
+
+			if (isNaN(selectedDate.getTime())) {
+				// Check if the date is invalid, e.g., "30 Feb 2024"
+				setErrors({ ...errors, date: "Invalid date. Please check the value." });
+				setFormData({ ...formData, date: "" }); // Reset date to an empty string
+			} else if (selectedDate > today) {
+				// Check for future dates
+				setErrors({ ...errors, date: "Future dates are not allowed." });
+				setFormData({ ...formData, date: "" }); // Reset date to an empty string
+			} else {
+				// Valid date
+				setErrors({ ...errors, date: "" }); // Clear error
+				setFormData({ ...formData, date: value });
+			}
+		} else {
+			// Handle other fields
+			setFormData({ ...formData, [name]: value });
+			if (errors[name as keyof typeof errors]) {
+				setErrors({ ...errors, [name]: "" }); // Clear error for valid input
+			}
+		}
 	};
 
 	const handleAmountChange = (value: number | null) => {
-		setFormData({ ...formData, amount: value || 0 });
+		if (value === null || value <= 0) {
+			setErrors({ ...errors, amount: "Amount must be greater than zero." });
+			setFormData((prevState) => ({ ...prevState, amount: 0 })); // Reset to default value
+		} else {
+			setErrors({ ...errors, amount: "" });
+			setFormData({ ...formData, amount: value });
+		}
 	};
 
-	const handleSelectChange = (value: string, name: string) => {
-		console.log("currency", value);
-		setFormData({ ...formData, [name]: value });
+	const handleCurrencyChange = (value: string) => {
+		if (!currencyOptions.some((option) => option.value === value)) {
+			setErrors({ ...errors, currency: "Invalid currency selected." });
+			setFormData((prevState) => ({
+				...prevState,
+				currency: currencyOptions[0].value,
+			})); // Reset to default currency
+		} else {
+			setErrors({ ...errors, currency: "" });
+			setFormData({ ...formData, currency: value });
+		}
 	};
 
-	const validateForm = () => {
-		const errors: string[] = [];
-		if (!formData.description) errors.push("Description is required");
+	const validateForm = (): boolean => {
+		const newErrors: typeof errors = {
+			description: "",
+			amount: "",
+			date: "",
+			currency: "",
+		};
+
+		if (!formData.description)
+			newErrors.description = "Description is required.";
 		if (formData.amount === null || formData.amount <= 0)
-			errors.push("Amount must be greater than zero");
-		if (!formData.date) errors.push("Date is required");
-		if (!formData.currency) errors.push("Currency is required");
+			newErrors.amount = "Amount must be greater than zero.";
+		if (!formData.date) newErrors.date = "Date is required.";
+		if (!formData.currency) newErrors.currency = "Currency is required.";
 
-		console.log("errors", errors);
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
-		setErrorMessages(errors);
+	const isFormValid = (): boolean => {
+		if (!formData.date) return false;
 
-		console.log("errors", errorMessages);
-		return errors.length === 0;
+		const selectedDate = new Date(formData.date);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+
+		return (
+			formData.description.trim() !== "" && // Check for a non-empty description
+			formData.amount > 0 && // Ensure amount is greater than 0
+			!isNaN(selectedDate.getTime()) && // Validate date format
+			selectedDate <= today && // Ensure date is not in the future
+			!!formData.currency && // Check if currency is selected
+			!Object.values(errors).some((error) => error) // Ensure no errors in the form
+		);
 	};
 
 	const handleSave = async () => {
@@ -223,7 +295,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 				...formData,
 				date: dateFormatter(formData.date),
 			};
-			console.log("formdata", rest,updatedFormData);
+			console.log("formdata", rest, updatedFormData);
 
 			const response = await addTransaction(updatedFormData);
 			console.log(response);
@@ -254,14 +326,10 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 			title="Add a Transaction"
 			open={true}
 			onCancel={handleClose}
-			footer={false}
+			footer={null}
 		>
 			<Form layout="vertical" initialValues={formData}>
-				<Form.Item
-					label="Description"
-					name="description"
-					rules={[{ required: true, message: "Description is required" }]}
-				>
+				<Form.Item label="Description">
 					<Input
 						placeholder="Enter description"
 						name="description"
@@ -269,52 +337,45 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						onChange={handleChange}
 						disabled={loading}
 					/>
+					{errors.description && (
+						<p className="text-red-500">{errors.description}</p>
+					)}
 				</Form.Item>
 
-				<Form.Item
-					label="Amount"
-					name="amount"
-					rules={[
-						{ required: true, message: "Amount is required." },
-						{
-							type: "number",
-							min: 1,
-							message: "Amount must be greater than zero.",
-						},
-					]}
-				>
+				<Form.Item label="Amount">
 					<InputNumber
 						type="number"
 						placeholder="Enter amount"
-						value={formData.amount}
+						value={formData.amount || 0}
 						onChange={handleAmountChange}
 						disabled={loading}
 						className="w-full"
 					/>
+					{errors.amount && <p className="text-red-500">{errors.amount}</p>}
 				</Form.Item>
 
-				<Form.Item
-					label="Date"
-					name="date"
-					rules={[{ required: true, message: "Date is required" }]}
-				>
+				<Form.Item label="Date">
 					<Input
 						type="date"
+						id="date-input"
 						name="date"
 						placeholder="Enter date"
+						value={formData.date}
 						onChange={handleChange}
+						disabled={loading}
+						onClick={(e) => {
+							(e.target as HTMLInputElement).showPicker();
+						}}
 					/>
+
+					{errors.date && <p className="text-red-500">{errors.date}</p>}
 				</Form.Item>
 
-				<Form.Item
-					label="Currency"
-					name="currency"
-					rules={[{ required: true, message: "Currency is required" }]}
-				>
+				<Form.Item label="Currency">
 					<Select
 						placeholder="Select currency"
 						value={formData.currency}
-						onChange={(value) => handleSelectChange(value, "currency")}
+						onChange={handleCurrencyChange}
 						disabled={loading}
 					>
 						{currencyOptions.map((option) => (
@@ -323,18 +384,8 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 							</Select.Option>
 						))}
 					</Select>
+					{errors.currency && <p className="text-red-500">{errors.currency}</p>}
 				</Form.Item>
-
-				{/* Error Messages
-				{errorMessages.length > 0 && (
-					<div className="error-messages">
-						{errorMessages.map((error, index) => (
-							<p key={index} className="text-red-500">
-								{error}
-							</p>
-						))}
-					</div>
-				)} */}
 
 				{/* Footer Buttons */}
 				<Form.Item>
@@ -347,14 +398,14 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 							Close
 						</Button>
 						<Button
+							aria-label="add-save-button"
 							type="primary"
-							htmlType="submit"
 							loading={loading}
 							className="ml-2"
 							onClick={handleSave}
-							aria-label="add-save-button"
+							disabled={!isFormValid() || loading} // Disable the button if form is invalid or loading
 						>
-							Save Changes
+							Save
 						</Button>
 					</div>
 				</Form.Item>
