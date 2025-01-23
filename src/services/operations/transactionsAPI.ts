@@ -118,6 +118,7 @@ export async function getPaginatedTransactions(
 		});
 		return res.data;
 	} catch (error) {
+		console.error("Error in getPaginatedTransactions:", error);
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
 				message: "Error while fetching transactions",
@@ -125,7 +126,7 @@ export async function getPaginatedTransactions(
 				duration: 2,
 			});
 		}
-		console.error("Error in getPaginatedTransactions:", error);
+		
 	}
 }
 

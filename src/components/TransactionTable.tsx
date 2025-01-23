@@ -5,7 +5,7 @@ import {
 	AiOutlineEdit,
 	AiOutlineFileAdd,
 } from "react-icons/ai";
-import { Checkbox, Modal, notification, Table, Button } from "antd";
+import { Checkbox, Modal, notification, Table, Button, } from "antd";
 
 import {
 	AntUiTransaction,
@@ -21,6 +21,8 @@ import {
 import AddTransactionModal from "../modals/AddTransactionModal";
 import EditTransactionModal from "../modals/EditTransactionModal";
 import UploadCSVModal from "../modals/UploadCSVmodal";
+
+// const { Search } = Input;
 
 const TransactionTable: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
@@ -302,7 +304,7 @@ const TransactionTable: React.FC = () => {
 							type="primary"
 							icon={<AiFillDelete />}
 							danger
-							onClick={()=>handleDeleteAll()}
+							onClick={() => handleDeleteAll()}
 							disabled={totalTransactions === 0}
 						>
 							Delete All
