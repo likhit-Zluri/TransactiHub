@@ -17,6 +17,9 @@ export const transactionEndpoints = {
 	// Add multiple transactions through CSV
 	UPLOADTRANSACTIONS_API: "/transactions/upload",
 
-	// Delete all transactions
-	BULKDELETE_API: "/transactions",
+	// Multiple all transactions
+	MULTIPLEDELETE_API: "/transactions",
+
+	// Multiple all transactions
+	BULKDELETE_API: "/allTransactions",
 };

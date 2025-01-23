@@ -12,6 +12,7 @@ const {
 	GETPAGINATEDTRANSACTIONS_API,
 	DELETETRANSACTION_API,
 	UPLOADTRANSACTIONS_API,
+	MULTIPLEDELETE_API,
 	BULKDELETE_API,
 } = transactionEndpoints;
 
@@ -30,7 +31,7 @@ export async function addTransaction(data: TransactionInput) {
 
 		notification.success({
 			message: "Transaction Added succesfully",
-			duration: 2,
+			duration: 1,
 		});
 
 		return res.data;
@@ -39,6 +40,7 @@ export async function addTransaction(data: TransactionInput) {
 			notification.error({
 				message: "Error while Adding transactions",
 				description: `${error.response.data.message}`,
+				duration: 2,
 			});
 		}
 		console.error("Error in addTransaction:", error);
@@ -68,7 +70,7 @@ export const editTransaction = async (updatedData: {
 		console.log("res in editTransaction", res);
 		notification.success({
 			message: "Transaction Edited succesfully",
-			duration: 2,
+			duration: 1,
 		});
 
 		return res.data;
@@ -77,6 +79,7 @@ export const editTransaction = async (updatedData: {
 			notification.error({
 				message: "Error while Editing transactions",
 				description: `${error.response.data.message}`,
+				duration: 2,
 			});
 		}
 		console.error("Error in editTransaction:", error);
@@ -111,7 +114,7 @@ export async function getPaginatedTransactions(
 		notification.success({
 			message: "Transactions Fetched successfully",
 			description: res.data.message || "No Transactions found",
-			duration: 2,
+			duration: 1,
 		});
 		return res.data;
 	} catch (error) {
@@ -119,13 +122,11 @@ export async function getPaginatedTransactions(
 			notification.error({
 				message: "Error while fetching transactions",
 				description: `${error.response.data.message}`,
+				duration: 2,
 			});
 		}
 		console.error("Error in getPaginatedTransactions:", error);
 	}
-	// finally {
-	// 	console.log("getAllTransaction done");
-	// }
 }
 
 export async function deleteTransaction(transactionId: UUID) {
@@ -146,7 +147,7 @@ export async function deleteTransaction(transactionId: UUID) {
 		console.log("res in deleteTransaction", res);
 		notification.success({
 			message: "Transaction Deleted succesfully",
-			duration: 2,
+			duration: 1,
 		});
 
 		return res.data;
@@ -155,6 +156,7 @@ export async function deleteTransaction(transactionId: UUID) {
 			notification.error({
 				message: "Error while Deleting transactions",
 				description: `${error.response.data.message}`,
+				duration: 2,
 			});
 		}
 		console.error("Error while Deleting transaction:", error);
@@ -196,7 +198,7 @@ export async function uploadTransactions(
 		notification.success({
 			message: "Transactions Uploaded Successfully",
 			description: `${res.data.successCount} transactions were added successfully.`,
-			duration: 3,
+			duration: 1,
 		});
 
 		// return res.data;
@@ -222,7 +224,7 @@ export async function uploadTransactions(
 			notification.error({
 				message: "Error while Uploading Transactions",
 				description: `Some records failed validation, duplication, or already exist in the database. CSV files have been downloaded for each error type.`,
-				duration: 5,
+				duration: 3,
 			});
 		}
 
@@ -233,19 +235,19 @@ export async function uploadTransactions(
 export async function deleteMultipleTransactions(ids: UUID[]) {
 	try {
 		const res = await apiConnector({
-			url: BULKDELETE_API,
+			url: MULTIPLEDELETE_API,
 			method: "DELETE",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			bodyData: {ids},
+			bodyData: { ids },
 		});
 
 		console.log("res in deleteTransactions", res);
 
 		notification.success({
 			message: "Transactions Deleted succesfully",
-			duration: 2,
+			duration: 1,
 		});
 
 		return res.data;
@@ -254,8 +256,39 @@ export async function deleteMultipleTransactions(ids: UUID[]) {
 			notification.error({
 				message: "Error while Deleting transactions",
 				description: `${error.response.data.message}`,
+				duration: 2,
 			});
 		}
 		console.error("Error in deleteTransactions:", error);
+	}
+}
+
+export async function deleteAllTransactions() {
+	try {
+		const res = await apiConnector({
+			url: BULKDELETE_API,
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+
+		console.log("res in deleteAllTransactions", res);
+
+		notification.success({
+			message: "All Transactions Deleted succesfully",
+			duration: 1,
+		});
+
+		return res.data;
+	} catch (error) {
+		if (error instanceof AxiosError && error.response) {
+			notification.error({
+				message: "Error while All Deleting transactions",
+				description: `${error.response.data.message}`,
+				duration: 2,
+			});
+		}
+		console.error("Error in All deleteTransactions:", error);
 	}
 }

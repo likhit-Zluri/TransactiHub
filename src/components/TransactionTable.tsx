@@ -16,6 +16,7 @@ import {
 	getPaginatedTransactions,
 	deleteTransaction,
 	deleteMultipleTransactions,
+	deleteAllTransactions,
 } from "../services/operations/transactionsAPI";
 import AddTransactionModal from "../modals/AddTransactionModal";
 import EditTransactionModal from "../modals/EditTransactionModal";
@@ -103,6 +104,20 @@ const TransactionTable: React.FC = () => {
 				setSelectedIds([]);
 				setHeaderCheckbox(false);
 
+				await fetchTransactions();
+			},
+		});
+	};
+
+	// Handle "Delete All" transactions
+	const handleDeleteAll = () => {
+		Modal.confirm({
+			title: "Are you sure you want to delete all transactions?",
+			content: "This action cannot be undone.",
+			onOk: async () => {
+				await deleteAllTransactions();
+				setSelectedIds([]);
+				setHeaderCheckbox(false);
 				await fetchTransactions();
 			},
 		});
@@ -284,6 +299,16 @@ const TransactionTable: React.FC = () => {
 						</Button>
 
 						<Button
+							type="primary"
+							icon={<AiFillDelete />}
+							danger
+							onClick={()=>handleDeleteAll()}
+							disabled={totalTransactions === 0}
+						>
+							Delete All
+						</Button>
+
+						<Button
 							key="upload"
 							type="primary"
 							icon={<AiOutlineCloudUpload />}
@@ -343,6 +368,10 @@ const TransactionTable: React.FC = () => {
 								console.log("pagination", page, pageSize);
 								setCurrentPage(page); // Update the current page
 								SetPageSize(pageSize); // Update the page size
+							},
+							showTotal: (total, range) => {
+								// `range` will contain the current start and end range of records on the page
+								return `${range[0]}-${range[1]} of ${total}`;
 							},
 						}}
 						locale={{
