@@ -60,6 +60,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 		if (!formData.currency) errors.push("Currency is required");
 
 		setErrorMessages(errors);
+
+		console.log("errorMessages",errorMessages);
 		return errors.length === 0;
 	};
 
@@ -124,7 +126,14 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 				<Form.Item
 					label="Amount"
 					name="amount"
-					rules={[{ required: true, message: "Amount is required" }]}
+					rules={[
+						{ required: true, message: "Amount is required." },
+						{
+							type: "number",
+							min: 1,
+							message: "Amount must be greater than zero.",
+						},
+					]}
 				>
 					<InputNumber
 						placeholder="Enter amount"
@@ -163,7 +172,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 				</Form.Item>
 
 				{/* Error Messages */}
-				{errorMessages.length > 0 && (
+				{/* {errorMessages.length > 0 && (
 					<div className="error-messages">
 						{errorMessages.map((error, index) => (
 							<p key={index} className="text-red-500">
@@ -171,15 +180,20 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 							</p>
 						))}
 					</div>
-				)}
+				)} */}
 
 				{/* Footer Buttons */}
 				<Form.Item>
 					<div className="modal-footer">
-						<Button onClick={handleClose} disabled={loading}>
+						<Button
+							aria-label="edit-close-button"
+							onClick={handleClose}
+							disabled={loading}
+						>
 							Close
 						</Button>
 						<Button
+							aria-label="edit-save-button"
 							type="primary"
 							htmlType="submit"
 							loading={loading}

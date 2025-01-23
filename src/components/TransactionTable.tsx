@@ -51,7 +51,10 @@ const TransactionTable: React.FC = () => {
 		setLoading(true);
 		try {
 			const response = await getPaginatedTransactions(currentPage, pageSize);
-			console.log({response})
+			// console.log({ response });
+			console.log("transaction", response);
+			console.log("response.data", response.data);
+			console.log("response.data.transactions", response.data.transactions);
 			if (response) {
 				setTransactionsList(response.data.transactions);
 				setTotalTransactions(response.data.totalCount);
@@ -69,6 +72,11 @@ const TransactionTable: React.FC = () => {
 	const handleDelete = async (transactionId: UUID) => {
 		Modal.confirm({
 			title: "Are you sure you want to delete this transaction?",
+			content: (
+				<div data-testid="delete-confirmation-modal">
+					This action cannot be undone.
+				</div>
+			),
 			onOk: async () => {
 				const res = await deleteTransaction(transactionId);
 				console.log("res in handleDelete", res);
@@ -107,57 +115,22 @@ const TransactionTable: React.FC = () => {
 	const handleEditTransaction = (transaction: TransactionFromDB) => {
 		console.log("transaction", transaction);
 
-		setEditingTransaction(transaction); // Set the transaction to be edited
-		setEditTransactionModal(true); // Open Edit Transaction Modal
+		setEditingTransaction(transaction);
+		setEditTransactionModal(true);
 	};
 
-	const handleTransactionAdded = (newTransaction: TransactionFromDB) => {
+	const handleTransactionAdded = async () => {
 		console.log("in handleTransactionAdded");
-
-		setTransactionsList((prevList) => {
-			// Add the new transaction
-			const updatedList = [...prevList, newTransaction];
-
-			// Sort transactions by date (most recent first)
-			updatedList.sort(
-				(a, b) =>
-					new Date(b.parsedDate).getTime() - new Date(a.parsedDate).getTime()
-			);
-
-			// Check if the number of transactions exceeds the pageSize
-			if (updatedList.length > pageSize) {
-				// If so, slice the list to only keep the latest `pageSize` transactions
-				return updatedList.slice(0, pageSize);
-			}
-
-			return updatedList;
-		});
-		setAddTransactionModal(false); // Close the modal after adding the transaction
+		await fetchTransactions();
 	};
 
-	const handleTransactionEdited = (updatedTransaction: TransactionFromDB) => {
-		setTransactionsList((prevList) => {
-			// Update the transaction in the list
-			const updatedList = prevList.map((transaction) =>
-				transaction.id === updatedTransaction.id
-					? updatedTransaction
-					: transaction
-			);
-
-			// Sort transactions by date (most recent first)
-			updatedList.sort(
-				(a, b) =>
-					new Date(b.parsedDate).getTime() - new Date(a.parsedDate).getTime()
-			);
-
-			return updatedList;
-		});
-
-		setAddTransactionModal(false); // Close the modal after editing the transaction
+	const handleTransactionEdited = async () => {
+		console.log("in handleTransactionEdited");
+		await fetchTransactions();
 	};
 
 	const handleCSVUpload = () => {
-		setUploadCSVModal(true); // Open Upload CSV Modal
+		setUploadCSVModal(true);
 	};
 
 	const handleCSVUploaded = async () => {
@@ -168,6 +141,7 @@ const TransactionTable: React.FC = () => {
 		{
 			title: (
 				<Checkbox
+					name="header-checkbox"
 					checked={headerCheckbox}
 					onChange={(e) => handleHeaderCheckboxChange(e.target.checked)}
 				/>
@@ -176,6 +150,7 @@ const TransactionTable: React.FC = () => {
 			key: "checkbox",
 			render: (_: unknown, record: { id: UUID }) => (
 				<Checkbox
+					name={`checkbox-${record.id}`}
 					checked={selectedIds.includes(record.id)}
 					onChange={(e) => handleRowCheckboxChange(record.id, e.target.checked)}
 				/>
@@ -263,6 +238,7 @@ const TransactionTable: React.FC = () => {
 						Edit
 					</Button>
 					<Button
+						aria-label="single-delete"
 						type="primary"
 						icon={<AiFillDelete />}
 						className="bg-red-500 hover:bg-red-600 text-white"
@@ -317,6 +293,7 @@ const TransactionTable: React.FC = () => {
 							Upload CSV
 						</Button>
 						<Button
+							aria-label="add transaction"
 							type="primary"
 							icon={<AiOutlineFileAdd />}
 							onClick={handleAddTransaction}
@@ -338,19 +315,22 @@ const TransactionTable: React.FC = () => {
 					</div>
 				) : (
 					<Table
-						dataSource={transactionsList.map((transaction) => ({
-							key: transaction.id,
-							id: transaction.id,
-							date: transaction.date,
-							description:
-								// transaction.description.length > 47
-								// 	? `${transaction.description.substring(0, 47)}...`
-								// 	:
-								transaction.description,
-							amount: transaction.amount / 100,
-							currency: transaction.currency,
-							amountInINR: transaction.amountInINR / 100,
-						}))}
+						dataSource={
+							transactionsList &&
+							transactionsList.map((transaction) => ({
+								key: transaction.id,
+								id: transaction.id,
+								date: transaction.date,
+								description:
+									// transaction.description.length > 47
+									// 	? `${transaction.description.substring(0, 47)}...`
+									// 	:
+									transaction.description,
+								amount: transaction.amount / 100,
+								currency: transaction.currency,
+								amountInINR: transaction.amountInINR / 100,
+							}))
+						}
 						columns={columns}
 						pagination={{
 							position: ["topCenter", "bottomCenter"],

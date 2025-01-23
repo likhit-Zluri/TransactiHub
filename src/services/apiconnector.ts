@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig, Method } from "axios";
 // Create an axios instance
 export const axiosInstance = axios.create({
 	baseURL: "http://localhost:3000/api",
-	// baseURL: "https://transactiGhub-bd.onrender.com/api",
+	// baseURL: "https://transactihub-bd.onrender.com/api",
 });
 // export const axiosInstance = axios.create();
 
