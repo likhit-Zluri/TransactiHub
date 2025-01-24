@@ -14,6 +14,7 @@ const {
 	UPLOADTRANSACTIONS_API,
 	MULTIPLEDELETE_API,
 	BULKDELETE_API,
+	// GETSEARCH_API,
 } = transactionEndpoints;
 
 export async function addTransaction(data: TransactionInput) {
@@ -88,15 +89,23 @@ export const editTransaction = async (updatedData: {
 
 export async function getPaginatedTransactions(
 	currentPage: number,
-	limit: number
+	limit: number,
+	// date?: string, // Optional date parameter
+	description?: string // Optional description parameter
 ) {
 	try {
 		// Construct query parameters using URLSearchParams
-		const queryParams = {
+		const queryParams: Record<string, string> = {
 			page: currentPage.toString(),
 			limit: limit.toString(),
 		};
+		// Conditionally add the optional parameters if they are provided
+		// if (date) queryParams.date = date;
+		if (description) queryParams.search = description;
+
 		const searchParams = new URLSearchParams(queryParams);
+
+		// const url = `${GETPAGINATEDTRANSACTIONS_API}?${searchParams}`;
 
 		const url = `${GETPAGINATEDTRANSACTIONS_API}?${searchParams}`;
 
@@ -126,7 +135,6 @@ export async function getPaginatedTransactions(
 				duration: 2,
 			});
 		}
-		
 	}
 }
 

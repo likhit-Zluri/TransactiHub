@@ -193,17 +193,52 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 	const [loading, setLoading] = useState(false);
 
+	// const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	// 	const { name, value } = e.target;
+
+	// 	if (name === "date") {
+	// 		const selectedDate = new Date(value);
+	// 		const today = new Date();
+	// 		today.setHours(0, 0, 0, 0); // Normalize time for accurate comparison
+
+	// 		console.log("date", value, selectedDate);
+
+	// 		if (isNaN(selectedDate.getTime())) {
+	// 			// Check if the date is invalid, e.g., "30 Feb 2024"
+	// 			setErrors({ ...errors, date: "Invalid date. Please check the value." });
+	// 			setFormData({ ...formData, date: "" }); // Reset date to an empty string
+	// 		} else if (selectedDate > today) {
+	// 			// Check for future dates
+	// 			setErrors({ ...errors, date: "Future dates are not allowed." });
+	// 			setFormData({ ...formData, date: "" }); // Reset date to an empty string
+	// 		} else {
+	// 			// Valid date
+	// 			setErrors({ ...errors, date: "" }); // Clear error
+	// 			setFormData({ ...formData, date: value });
+	// 		}
+	// 	} else {
+	// 		// Handle other fields
+	// 		setFormData({ ...formData, [name]: value });
+	// 		if (errors[name as keyof typeof errors]) {
+	// 			setErrors({ ...errors, [name]: "" }); // Clear error for valid input
+	// 		}
+	// 	}
+	// };
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
+		console.log("name", value);
 
 		if (name === "date") {
 			const selectedDate = new Date(value);
 			const today = new Date();
 			today.setHours(0, 0, 0, 0); // Normalize time for accurate comparison
 
-			console.log("date", value, selectedDate);
-
-			if (isNaN(selectedDate.getTime())) {
+			if (value === "") {
+				// If the user clicks but types nothing
+				setErrors({ ...errors, date: "Date is required." });
+				setFormData({ ...formData, date: "" }); // Reset date to an empty string
+			} else if (isNaN(selectedDate.getTime())) {
 				// Check if the date is invalid, e.g., "30 Feb 2024"
 				setErrors({ ...errors, date: "Invalid date. Please check the value." });
 				setFormData({ ...formData, date: "" }); // Reset date to an empty string
@@ -218,10 +253,19 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 			}
 		} else {
 			// Handle other fields
-			setFormData({ ...formData, [name]: value });
-			if (errors[name as keyof typeof errors]) {
+			if (value == "") {
+				console.log(`else value ==="`);
+				// Validate empty input for other fields
+				setErrors({
+					...errors,
+					[name]: `${
+						name.charAt(0).toUpperCase() + name.slice(1)
+					} is required.`,
+				});
+			} else {
 				setErrors({ ...errors, [name]: "" }); // Clear error for valid input
 			}
+			setFormData({ ...formData, [name]: value });
 		}
 	};
 
@@ -248,13 +292,20 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 		}
 	};
 
+	const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+
+		if (value === "") {
+			setErrors({
+				...errors,
+				[name]: `${name.charAt(0).toUpperCase() + name.slice(1)} is required.`,
+			});
+		}
+	};
+
 	const validateForm = (): boolean => {
-		const newErrors: typeof errors = {
-			description: "",
-			amount: "",
-			date: "",
-			currency: "",
-		};
+		const newErrors: typeof errors = {};
+		console.log("formData", formData);
 
 		if (!formData.description)
 			newErrors.description = "Description is required.";
@@ -264,6 +315,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 		if (!formData.currency) newErrors.currency = "Currency is required.";
 
 		setErrors(newErrors);
+		console.log("newErrors", newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
 
@@ -287,7 +339,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 	const handleSave = async () => {
 		console.log("in save");
 		if (!validateForm()) return;
-
+		console.log("in save");
 		setLoading(true);
 		try {
 			const { ...rest } = formData;
@@ -310,8 +362,6 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 			onTransactionAdded();
 
 			setAddTransactionModal(false);
-		} catch (error) {
-			console.error("Error editing transaction:", error);
 		} finally {
 			setLoading(false);
 		}
@@ -336,6 +386,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						value={formData.description}
 						onChange={handleChange}
 						disabled={loading}
+						onBlur={handleBlur}
 					/>
 					{errors.description && (
 						<p className="text-red-500">{errors.description}</p>
@@ -346,8 +397,9 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 					<InputNumber
 						type="number"
 						placeholder="Enter amount"
-						value={formData.amount || 0}
+						value={formData.amount}
 						onChange={handleAmountChange}
+						onBlur={handleBlur}
 						disabled={loading}
 						className="w-full"
 					/>
@@ -362,6 +414,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						placeholder="Enter date"
 						value={formData.date}
 						onChange={handleChange}
+						onBlur={handleBlur}
 						disabled={loading}
 						onClick={(e) => {
 							(e.target as HTMLInputElement).showPicker();
@@ -376,6 +429,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						placeholder="Select currency"
 						value={formData.currency}
 						onChange={handleCurrencyChange}
+						onBlur={handleBlur}
 						disabled={loading}
 					>
 						{currencyOptions.map((option) => (
@@ -401,6 +455,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 							aria-label="add-save-button"
 							type="primary"
 							loading={loading}
+							htmlType="submit"
 							className="ml-2"
 							onClick={handleSave}
 							disabled={!isFormValid() || loading} // Disable the button if form is invalid or loading

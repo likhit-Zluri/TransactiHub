@@ -5,7 +5,16 @@ import {
 	AiOutlineEdit,
 	AiOutlineFileAdd,
 } from "react-icons/ai";
-import { Checkbox, Modal, notification, Table, Button, } from "antd";
+import {
+	Checkbox,
+	Modal,
+	notification,
+	Table,
+	Button,
+	Input,
+	// Menu,
+	// Dropdown,
+} from "antd";
 
 import {
 	AntUiTransaction,
@@ -14,7 +23,7 @@ import {
 } from "../types/Transaction";
 import {
 	getPaginatedTransactions,
-	deleteTransaction,
+	// deleteTransaction,
 	deleteMultipleTransactions,
 	deleteAllTransactions,
 } from "../services/operations/transactionsAPI";
@@ -40,8 +49,11 @@ const TransactionTable: React.FC = () => {
 	// const [deleting, setDeleting] = useState(false);
 
 	const [headerCheckbox, setHeaderCheckbox] = useState(false);
-
 	const [selectedIds, setSelectedIds] = useState<UUID[]>([]);
+
+	// New state for search filters
+	// const [searchDate, setSearchDate] = useState<string>("");
+	const [searchDescription, setSearchDescription] = useState<string>("");
 
 	// const [editingTransaction, setEditingTransaction] = useState<
 	// 	dataSourceType | undefined
@@ -53,7 +65,12 @@ const TransactionTable: React.FC = () => {
 	const fetchTransactions = async () => {
 		setLoading(true);
 		try {
-			const response = await getPaginatedTransactions(currentPage, pageSize);
+			const response = await getPaginatedTransactions(
+				currentPage,
+				pageSize,
+				searchDescription
+			); // Pass search filters
+
 			// console.log({ response });
 			console.log("transaction", response);
 			console.log("response.data", response.data);
@@ -69,30 +86,30 @@ const TransactionTable: React.FC = () => {
 	useEffect(() => {
 		fetchTransactions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage, pageSize]);
+	}, [currentPage, pageSize, searchDescription]);
 
 	// Handle single transaction delete
-	const handleDelete = async (transactionId: UUID) => {
-		Modal.confirm({
-			title: "Are you sure you want to delete this transaction?",
-			content: (
-				<div data-testid="delete-confirmation-modal">
-					This action cannot be undone.
-				</div>
-			),
-			onOk: async () => {
-				const res = await deleteTransaction(transactionId);
-				console.log("res in handleDelete", res);
-				setTransactionsList((prevList) =>
-					prevList.filter((transaction) => transaction.id !== transactionId)
-				);
-				notification.success({
-					message: "Transaction Deleted",
-					description: "The transaction has been deleted successfully.",
-				});
-			},
-		});
-	};
+	// const handleDelete = async (transactionId: UUID) => {
+	// 	Modal.confirm({
+	// 		title: "Are you sure you want to delete this transaction?",
+	// 		content: (
+	// 			<div data-testid="delete-confirmation-modal">
+	// 				This action cannot be undone.
+	// 			</div>
+	// 		),
+	// 		onOk: async () => {
+	// 			const res = await deleteTransaction(transactionId);
+	// 			console.log("res in handleDelete", res);
+	// 			setTransactionsList((prevList) =>
+	// 				prevList.filter((transaction) => transaction.id !== transactionId)
+	// 			);
+	// 			notification.success({
+	// 				message: "Transaction Deleted",
+	// 				description: "The transaction has been deleted successfully.",
+	// 			});
+	// 		},
+	// 	});
+	// };
 
 	// Handle the action of bulk deleting transactions
 	const handleBulkDelete = () => {
@@ -152,6 +169,40 @@ const TransactionTable: React.FC = () => {
 
 	const handleCSVUploaded = async () => {
 		await fetchTransactions();
+	};
+
+	// Handle Menu Item Click for Export
+	// const handleMenuClick = async (key: string) => {
+	// 	console.log("Menu Item Clicked:", key);
+	// 	if (key === "exportAll") {
+	// 		// Logic to export all transactions
+	// 		notification.info({
+	// 			message: "Export All",
+	// 			description: "You selected to export all transactions.",
+	// 		});
+	// 	} else if (key === "exportPage") {
+	// 		// Logic to export the current page
+	// 		notification.info({
+	// 			message: "Export Page",
+	// 			description: "You selected to export the current page of transactions.",
+	// 		});
+	// 	}
+	// };
+
+	// Define the items array with key-value pairs
+	// const items = [
+	// 	{
+	// 		key: "exportAll",
+	// 		label: <span>Export All</span>,
+	// 	},
+	// 	{
+	// 		key: "exportPage",
+	// 		label: <span>Export Page</span>,
+	// 	},
+	// ];
+
+	const handleSearch = (value: string) => {
+		setSearchDescription(value);
 	};
 
 	const columns = [
@@ -244,7 +295,7 @@ const TransactionTable: React.FC = () => {
 		{
 			title: "Actions",
 			key: "actions",
-			render: (_: unknown, record: AntUiTransaction, index: number) => (
+			render: (_: unknown, _record: AntUiTransaction, index: number) => (
 				<div className="flex space-x-2">
 					<Button
 						type="primary"
@@ -254,7 +305,7 @@ const TransactionTable: React.FC = () => {
 					>
 						Edit
 					</Button>
-					<Button
+					{/* <Button
 						aria-label="single-delete"
 						type="primary"
 						icon={<AiFillDelete />}
@@ -262,7 +313,7 @@ const TransactionTable: React.FC = () => {
 						onClick={() => handleDelete(record.id)}
 					>
 						Delete
-					</Button>
+					</Button> */}
 				</div>
 			),
 			width: 1,
@@ -283,15 +334,178 @@ const TransactionTable: React.FC = () => {
 		});
 	};
 
+	// return (
+	// 	<div className="min-h-screen bg-gray-50 p-6">
+	// 		<div className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
+	// 			{/* Header */}
+	// 			<div className="flex justify-between items-center mb-6">
+	// 				<h1 className="text-2xl font-semibold text-gray-700">Transactions</h1>
+	// 				<div className="flex space-x-4">
+	// 					{/* Export Dropdown */}
+	// 					{/* <Dropdown
+	// 						overlay={
+	// 							<Menu items={items} onClick={(e) => handleMenuClick(e.key)} />
+	// 						}
+	// 					>
+	// 						<Button className="flex items-center space-x-2">
+	// 							<span>Export</span>
+	// 							<AiOutlineCloudUpload />
+	// 						</Button>
+	// 					</Dropdown> */}
+	// 					{/* Search Box for Date */}
+	// 					{/* <Input
+	// 						placeholder="Search by Date"
+	// 						value={searchDate}
+	// 						onChange={(e) => handleSearch(e.target.value, "date")}
+	// 						className="w-40"
+	// 					/> */}
+	// 					{/* Search Box for Description */}
+	// 					<Input
+	// 						placeholder="Search by Description"
+	// 						value={searchDescription}
+	// 						onChange={(e) => handleSearch(e.target.value)}
+	// 						className="w-50"
+	// 					/>
+	// 					<Button
+	// 						type="primary"
+	// 						icon={<AiFillDelete />}
+	// 						danger
+	// 						disabled={selectedIds.length === 0}
+	// 						onClick={() => handleBulkDelete()}
+	// 					>
+	// 						Delete Selected
+	// 					</Button>
+	// 					<Button
+	// 						type="primary"
+	// 						icon={<AiFillDelete />}
+	// 						danger
+	// 						onClick={() => handleDeleteAll()}
+	// 						disabled={totalTransactions === 0}
+	// 					>
+	// 						Delete All
+	// 					</Button>
+	// 					<Button
+	// 						key="upload"
+	// 						type="primary"
+	// 						icon={<AiOutlineCloudUpload />}
+	// 						onClick={handleCSVUpload}
+	// 						className="bg-green-500 hover:bg-green-600 text-white border-green-500"
+	// 					>
+	// 						Upload CSV
+	// 					</Button>
+	// 					<Button
+	// 						aria-label="add transaction"
+	// 						type="primary"
+	// 						icon={<AiOutlineFileAdd />}
+	// 						onClick={handleAddTransaction}
+	// 						className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500"
+	// 					>
+	// 						Add Transaction
+	// 					</Button>
+	// 				</div>
+	// 			</div>
+
+	// 			{/* Loading Screen */}
+	// 			{loading ? (
+	// 				<div className="flex flex-col justify-center items-center min-h-screen">
+	// 					<div className="mb-4">Loading...</div>
+	// 					<div
+	// 						className="animate-spin rounded-full border-t-4 border-blue-500 h-12 w-12"
+	// 						// role="status"
+	// 					></div>
+	// 				</div>
+	// 			) : (
+	// 				<Table
+	// 					dataSource={
+	// 						transactionsList &&
+	// 						transactionsList.map((transaction) => ({
+	// 							key: transaction.id,
+	// 							id: transaction.id,
+	// 							date: transaction.date,
+	// 							description:
+	// 								// transaction.description.length > 47
+	// 								// 	? `${transaction.description.substring(0, 47)}...`
+	// 								// 	:
+	// 								transaction.description,
+	// 							amount: transaction.amount / 100,
+	// 							currency: transaction.currency,
+	// 							amountInINR: transaction.amountInINR / 100,
+	// 						}))
+	// 					}
+	// 					columns={columns}
+	// 					pagination={{
+	// 						position: ["topCenter", "bottomCenter"],
+	// 						current: currentPage, // The current page
+	// 						pageSize: pageSize, // The current page size
+	// 						total: totalTransactions, // Total number of transactions
+	// 						showSizeChanger: true, // Allow page size changer
+	// 						pageSizeOptions: ["10", "20", "30"], // Available page sizes
+	// 						onChange: (page, pageSize) => {
+	// 							console.log("pagination", page, pageSize);
+	// 							setCurrentPage(page); // Update the current page
+	// 							SetPageSize(pageSize); // Update the page size
+	// 						},
+	// 						showTotal: (total, range) => {
+	// 							// `range` will contain the current start and end range of records on the page
+	// 							return `${range[0]}-${range[1]} of ${total}`;
+	// 						},
+	// 					}}
+	// 					locale={{
+	// 						emptyText: "No transactions available.",
+	// 					}}
+	// 					scroll={{ x: "1000px" }}
+	// 					rowClassName={() => {
+	// 						return "h-[60px] overflow-hidden"; // Apply Tailwind classes directly here
+	// 					}}
+	// 				/>
+	// 			)}
+
+	// 			{/* Pagination */}
+	// 			{/* <div className="flex justify-between items-center mt-6">
+	// 				{totalTransactions}
+	// 			</div> */}
+	// 		</div>
+
+	// 		{/* Add Transaction Modal */}
+	// 		{addTransactionModal && (
+	// 			<AddTransactionModal
+	// 				setAddTransactionModal={setAddTransactionModal}
+	// 				onTransactionAdded={handleTransactionAdded}
+	// 			/>
+	// 		)}
+
+	// 		{/* Edit Transaction Modal */}
+	// 		{editTransactionModal && editingTransaction != undefined && (
+	// 			<EditTransactionModal
+	// 				setEditTransactionModal={setEditTransactionModal}
+	// 				onTransactionUpdated={handleTransactionEdited}
+	// 				transactionToEdit={editingTransaction}
+	// 			/>
+	// 		)}
+
+	// 		{/* Upload CSV Modal */}
+	// 		{uploadCSVModal && (
+	// 			<UploadCSVModal
+	// 				setUploadCSVModal={setUploadCSVModal}
+	// 				onCSVUploaded={handleCSVUploaded}
+	// 			/>
+	// 		)}
+	// 	</div>
+	// );
+
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
-			<div className="bg-white shadow-lg rounded-lg p-6 max-w-6xl mx-auto">
-				{/* Header */}
-				<div className="flex justify-between items-center mb-6">
-					<h1 className="text-2xl font-semibold text-gray-700">Transactions</h1>
-					<div className="flex space-x-4">
+		<div className="p-4 min-h-screen bg-gray-100">
+			<div className="bg-white shadow-md rounded p-4">
+				<div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0">
+					<h2 className="text-lg font-semibold">Transactions</h2>
+					<div className="flex flex-wrap gap-2">
+						<Input
+							placeholder="Search by Description"
+							value={searchDescription}
+							onChange={(e) => handleSearch(e.target.value)}
+							className="w-60"
+						/>
 						<Button
-							type="primary"
 							icon={<AiFillDelete />}
 							danger
 							disabled={selectedIds.length === 0}
@@ -299,117 +513,56 @@ const TransactionTable: React.FC = () => {
 						>
 							Delete Selected
 						</Button>
-
 						<Button
-							type="primary"
 							icon={<AiFillDelete />}
+							onClick={handleDeleteAll}
 							danger
-							onClick={() => handleDeleteAll()}
 							disabled={totalTransactions === 0}
 						>
 							Delete All
 						</Button>
-
-						<Button
-							key="upload"
-							type="primary"
-							icon={<AiOutlineCloudUpload />}
-							onClick={handleCSVUpload}
-							className="bg-green-500 hover:bg-green-600 text-white border-green-500"
-						>
-							Upload CSV
+						<Button icon={<AiOutlineFileAdd />} onClick={handleAddTransaction}>
+							Add
 						</Button>
-						<Button
-							aria-label="add transaction"
-							type="primary"
-							icon={<AiOutlineFileAdd />}
-							onClick={handleAddTransaction}
-							className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500"
-						>
-							Add Transaction
+						<Button icon={<AiOutlineCloudUpload />} onClick={handleCSVUpload}>
+							Upload CSV
 						</Button>
 					</div>
 				</div>
-
-				{/* Loading Screen */}
-				{loading ? (
-					<div className="flex flex-col justify-center items-center min-h-screen">
-						<div className="mb-4">Loading...</div>
-						<div
-							className="animate-spin rounded-full border-t-4 border-blue-500 h-12 w-12"
-							// role="status"
-						></div>
-					</div>
-				) : (
-					<Table
-						dataSource={
-							transactionsList &&
-							transactionsList.map((transaction) => ({
-								key: transaction.id,
-								id: transaction.id,
-								date: transaction.date,
-								description:
-									// transaction.description.length > 47
-									// 	? `${transaction.description.substring(0, 47)}...`
-									// 	:
-									transaction.description,
-								amount: transaction.amount / 100,
-								currency: transaction.currency,
-								amountInINR: transaction.amountInINR / 100,
-							}))
-						}
-						columns={columns}
-						pagination={{
-							position: ["topCenter", "bottomCenter"],
-							current: currentPage, // The current page
-							pageSize: pageSize, // The current page size
-							total: totalTransactions, // Total number of transactions
-							showSizeChanger: true, // Allow page size changer
-							pageSizeOptions: ["10", "20", "30"], // Available page sizes
-							onChange: (page, pageSize) => {
-								console.log("pagination", page, pageSize);
-								setCurrentPage(page); // Update the current page
-								SetPageSize(pageSize); // Update the page size
-							},
-							showTotal: (total, range) => {
-								// `range` will contain the current start and end range of records on the page
-								return `${range[0]}-${range[1]} of ${total}`;
-							},
-						}}
-						locale={{
-							emptyText: "No transactions available.",
-						}}
-						scroll={{ x: "1000px" }}
-						rowClassName={() => {
-							return "h-[60px] overflow-hidden"; // Apply Tailwind classes directly here
-						}}
-					/>
-				)}
-
-				{/* Pagination */}
-				{/* <div className="flex justify-between items-center mt-6">
-					{totalTransactions}
-				</div> */}
+				<Table
+					dataSource={transactionsList.map((transaction) => ({
+						key: transaction.id,
+						...transaction,
+					}))}
+					columns={columns}
+					pagination={{
+						current: currentPage,
+						total: totalTransactions,
+						pageSize,
+						showSizeChanger: true,
+						onChange: (page, size) => {
+							setCurrentPage(page);
+							SetPageSize(size);
+						},
+					}}
+					loading={loading}
+					scroll={{ x: true }}
+				/>
 			</div>
 
-			{/* Add Transaction Modal */}
 			{addTransactionModal && (
 				<AddTransactionModal
 					setAddTransactionModal={setAddTransactionModal}
 					onTransactionAdded={handleTransactionAdded}
 				/>
 			)}
-
-			{/* Edit Transaction Modal */}
-			{editTransactionModal && editingTransaction != undefined && (
+			{editTransactionModal && editingTransaction && (
 				<EditTransactionModal
 					setEditTransactionModal={setEditTransactionModal}
-					onTransactionUpdated={handleTransactionEdited}
 					transactionToEdit={editingTransaction}
+					onTransactionUpdated={handleTransactionEdited}
 				/>
 			)}
-
-			{/* Upload CSV Modal */}
 			{uploadCSVModal && (
 				<UploadCSVModal
 					setUploadCSVModal={setUploadCSVModal}

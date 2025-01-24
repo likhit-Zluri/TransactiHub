@@ -11,6 +11,7 @@ export const transactionEndpoints = {
 	// Get all transactions
 	GETPAGINATEDTRANSACTIONS_API: "/transactions",
 
+	GETSEARCH_API:"/searchtransactions",
 	// Delete a transaction
 	DELETETRANSACTION_API: "/transactions/:id",
 

@@ -4,7 +4,7 @@ const Navbar: React.FC = () => {
 	return (
 		<div className="bg-blue-600 text-white p-4 shadow-md">
 			<div className="max-w-6xl mx-auto flex justify-between items-center">
-				<h1 className="text-2xl font-semibold">My Dashboard</h1>
+				<h1 className="text-2xl font-semibold">TransactiHub</h1>
 				<div className="flex items-center space-x-4">
 					<div className="text-sm">
 						<span>Welcome, </span>
