@@ -41,7 +41,7 @@ export const generateCsvForErrors = async (
 	if (existingTransactionCsvContent) {
 		combinedCsvContent += "\n" + existingTransactionCsvContent;
 	}
-	console.log("combinedCsvContent",combinedCsvContent);
+	console.log("combinedCsvContent", combinedCsvContent);
 	// Create the combined CSV blob
 	const combinedCsvBlob = new Blob(
 		[decodeURIComponent(encodeURI(combinedCsvContent))],

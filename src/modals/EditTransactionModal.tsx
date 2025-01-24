@@ -31,6 +31,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 	onTransactionUpdated,
 	transactionToEdit,
 }) => {
+	console.log("transactionToEdit", transactionToEdit);
 	const [formData, setFormData] = useState<FormDataInterface>({
 		...transactionToEdit,
 		amount: transactionToEdit.amount / 100,
@@ -114,6 +115,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 	};
 
 	const handleSelectChange = (value: string) => {
+		console.log("handleSelectChange", value);
+
 		if (!currencyOptions.some((option) => option.value === value)) {
 			setErrors({ ...errors, currency: "Invalid currency selected." });
 			setFormData((prevState) => ({
@@ -138,12 +141,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 	};
 
 	const validateForm = (): boolean => {
-		const newErrors: typeof errors = {
-			description: "",
-			amount: "",
-			date: "",
-			currency: "",
-		};
+		const newErrors: typeof errors = {};
 
 		if (!formData.description)
 			newErrors.description = "Description is required.";
@@ -260,21 +258,28 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 				</Form.Item>
 
 				<Form.Item label="Currency" name="Currency">
-					<Select
-						placeholder="Select currency"
-						value={formData.currency}
-						onChange={handleSelectChange}
-						onBlur={handleBlur}
-						disabled={loading}
-						
-					>
-						{currencyOptions.map((option) => (
-							<Select.Option data-testid="currency-option" key={option.value} value={option.value}>
-								{option.label}
-							</Select.Option>
-						))}
-					</Select>
-					{errors.currency && <p className="text-red-500">{errors.currency}</p>}
+					<div>
+						<Select
+							placeholder="Select currency"
+							value={formData.currency}
+							onChange={handleSelectChange}
+							onBlur={handleBlur}
+							disabled={loading}
+						>
+							{currencyOptions.map((option) => (
+								<Select.Option
+									data-testid="currency-option"
+									key={option.value}
+									value={option.value}
+								>
+									{option.label}
+								</Select.Option>
+							))}
+						</Select>
+						{errors.currency && (
+							<p className="text-red-500">{errors.currency}</p>
+						)}
+					</div>
 				</Form.Item>
 
 				{/* Footer Buttons */}

@@ -276,7 +276,7 @@ const TransactionTable: React.FC = () => {
 			title: "Amount",
 			dataIndex: "amount",
 			key: "amount",
-			render: (amount: string) => `${amount}`,
+			render: (amount: string) => `${Number(amount)/100}`,
 			width: 1,
 		},
 		{
@@ -289,7 +289,7 @@ const TransactionTable: React.FC = () => {
 			title: "Amount in INR",
 			dataIndex: "amountInINR",
 			key: "amountInINR",
-			render: (amountInINR: string) => `₹${amountInINR}`,
+			render: (amountInINR: string) => `₹${Number(amountInINR)/100}`,
 			width: 102,
 		},
 		{
