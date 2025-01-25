@@ -509,6 +509,7 @@ const TransactionTable: React.FC = () => {
 							className="w-full sm:w-auto max-w-xs sm:max-w-none"
 						/>
 						<Button
+							type="dashed"
 							icon={<AiFillDelete />}
 							danger
 							disabled={selectedIds.length === 0}
@@ -518,6 +519,7 @@ const TransactionTable: React.FC = () => {
 							Delete Selected
 						</Button>
 						<Button
+							type="primary"
 							icon={<AiFillDelete />}
 							onClick={handleDeleteAll}
 							danger
@@ -527,6 +529,7 @@ const TransactionTable: React.FC = () => {
 							Delete All
 						</Button>
 						<Button
+							type="dashed"
 							icon={<AiOutlineFileAdd />}
 							onClick={handleAddTransaction}
 							className="w-full sm:w-auto max-w-xs sm:max-w-none"
@@ -534,6 +537,7 @@ const TransactionTable: React.FC = () => {
 							Add
 						</Button>
 						<Button
+							type="primary"
 							icon={<AiOutlineCloudUpload />}
 							onClick={handleCSVUpload}
 							className="w-full sm:w-auto max-w-xs sm:max-w-none"

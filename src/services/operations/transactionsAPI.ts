@@ -212,7 +212,11 @@ export async function uploadTransactions(
 
 		// return res.data;
 	} catch (error) {
-		if (error instanceof AxiosError && error.response) {
+		if (
+			error instanceof AxiosError &&
+			error.response &&
+			error.response.data.errors
+		) {
 			const {
 				validationErrors,
 				duplicationErrors,
@@ -235,8 +239,13 @@ export async function uploadTransactions(
 				description: `Some records failed validation, duplication, or already exist in the database. CSV files have been downloaded for each error type.`,
 				duration: 3,
 			});
+		} else if (error instanceof AxiosError) {
+			notification.error({
+				message: "Error while Uploading Transactions",
+				description: error.response?.data.message,
+				duration: 3,
+			});
 		}
-
 		console.error("Error in uploadTransaction:", error);
 	}
 }

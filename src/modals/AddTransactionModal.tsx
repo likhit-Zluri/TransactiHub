@@ -179,7 +179,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 	onTransactionAdded,
 }) => {
 	const [formData, setFormData] = useState<FormDataInterface>({
-		amount: 0,
+		amount: 1,
 		description: "",
 		date: "",
 		currency: currencyOptions[0].value,
@@ -193,41 +193,8 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 	const [loading, setLoading] = useState(false);
 
-	// const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	// 	const { name, value } = e.target;
-
-	// 	if (name === "date") {
-	// 		const selectedDate = new Date(value);
-	// 		const today = new Date();
-	// 		today.setHours(0, 0, 0, 0); // Normalize time for accurate comparison
-
-	// 		console.log("date", value, selectedDate);
-
-	// 		if (isNaN(selectedDate.getTime())) {
-	// 			// Check if the date is invalid, e.g., "30 Feb 2024"
-	// 			setErrors({ ...errors, date: "Invalid date. Please check the value." });
-	// 			setFormData({ ...formData, date: "" }); // Reset date to an empty string
-	// 		} else if (selectedDate > today) {
-	// 			// Check for future dates
-	// 			setErrors({ ...errors, date: "Future dates are not allowed." });
-	// 			setFormData({ ...formData, date: "" }); // Reset date to an empty string
-	// 		} else {
-	// 			// Valid date
-	// 			setErrors({ ...errors, date: "" }); // Clear error
-	// 			setFormData({ ...formData, date: value });
-	// 		}
-	// 	} else {
-	// 		// Handle other fields
-	// 		setFormData({ ...formData, [name]: value });
-	// 		if (errors[name as keyof typeof errors]) {
-	// 			setErrors({ ...errors, [name]: "" }); // Clear error for valid input
-	// 		}
-	// 	}
-	// };
-
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		console.log("name", value);
 
 		if (name === "date") {
 			const selectedDate = new Date(value);
@@ -251,11 +218,27 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 				setErrors({ ...errors, date: "" }); // Clear error
 				setFormData({ ...formData, date: value });
 			}
+		} else if (name === "description") {
+			// Handle description validation
+			if (value.length > 255) {
+				setErrors({
+					...errors,
+					description:
+						"Description must be less than or equal to 255 characters.",
+				});
+				setFormData({ ...formData, description: "" });
+			} else if (value === "") {
+				setErrors({
+					...errors,
+					description: "Description is required.",
+				});
+			} else {
+				setErrors({ ...errors, description: "" }); // Clear error when length is valid
+				setFormData({ ...formData, description: value });
+			}
 		} else {
 			// Handle other fields
-			if (value == "") {
-				console.log(`else value ==="`);
-				// Validate empty input for other fields
+			if (value === "") {
 				setErrors({
 					...errors,
 					[name]: `${
@@ -270,9 +253,12 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 	};
 
 	const handleAmountChange = (value: number | null) => {
-		if (value === null || value <= 0) {
+		if (isNaN(Number(value))) {
+			setErrors({ ...errors, amount: "Amount is required." });
+			setFormData({ ...formData, amount: 1 });
+		} else if (value === null || value <= 0) {
 			setErrors({ ...errors, amount: "Amount must be greater than zero." });
-			setFormData((prevState) => ({ ...prevState, amount: 0 })); // Reset to default value
+			setFormData({ ...formData, amount: 1 }); // Reset to default value
 		} else {
 			setErrors({ ...errors, amount: "" });
 			setFormData({ ...formData, amount: value });
@@ -379,7 +365,16 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 			footer={null}
 		>
 			<Form layout="vertical" initialValues={formData}>
-				<Form.Item label="Description">
+				<Form.Item
+					label={
+						<span>
+							Description{" "}
+							<span style={{ color: "gray", fontSize: "12px" }}>
+								(up to 255 characters)
+							</span>
+						</span>
+					}
+				>
 					<Input
 						placeholder="Enter description"
 						name="description"
@@ -393,7 +388,16 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 					)}
 				</Form.Item>
 
-				<Form.Item label="Amount">
+				<Form.Item
+					label={
+						<span>
+							Amount{" "}
+							<span style={{ color: "gray", fontSize: "12px" }}>
+								(up to 2 decimals, no negative values)
+							</span>
+						</span>
+					}
+				>
 					<InputNumber
 						type="number"
 						placeholder="Enter amount"
@@ -403,10 +407,20 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						disabled={loading}
 						className="w-full"
 					/>
+
 					{errors.amount && <p className="text-red-500">{errors.amount}</p>}
 				</Form.Item>
 
-				<Form.Item label="Date">
+				<Form.Item
+					label={
+						<span>
+							Date{" "}
+							<span style={{ color: "gray", fontSize: "12px" }}>
+								(no future dates)
+							</span>
+						</span>
+					}
+				>
 					<Input
 						type="date"
 						id="date-input"
