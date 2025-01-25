@@ -34,8 +34,10 @@ import UploadCSVModal from "../modals/UploadCSVmodal";
 // const { Search } = Input;
 
 const TransactionTable: React.FC = () => {
+	console.log("first", import.meta.env);
+
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
-	const [pageSize, SetPageSize] = useState(10); // Default to 10
+	const [pageSize, setPageSize] = useState(10); // Default to 10
 	const [loading, setLoading] = useState(false);
 	const [transactionsList, setTransactionsList] = useState<TransactionFromDB[]>(
 		[]
@@ -86,7 +88,7 @@ const TransactionTable: React.FC = () => {
 	useEffect(() => {
 		fetchTransactions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [currentPage, pageSize]);
 	// currentPage, pageSize, searchDescription
 
 	// Handle the action of bulk deleting transactions which are selected
@@ -338,8 +340,12 @@ const TransactionTable: React.FC = () => {
 						pageSize,
 						showSizeChanger: true,
 						onChange: (page, size) => {
-							setCurrentPage(page);
-							SetPageSize(size);
+							// Calculate the new page number to keep the user on the same relative transactions
+							const newPage = Math.ceil(((page - 1) * pageSize + 1) / size);
+
+							// Update the state with the new page number and page size
+							setCurrentPage(newPage);
+							setPageSize(size);
 						},
 					}}
 					loading={loading}
