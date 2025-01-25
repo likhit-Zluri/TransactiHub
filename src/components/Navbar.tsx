@@ -7,11 +7,11 @@ const Navbar: React.FC = () => {
 				<h1 className="text-2xl font-semibold">TransactiHub</h1>
 				<div className="flex items-center space-x-4">
 					<div className="text-sm">
-						<span>Welcome, </span>
-						<span className="font-semibold">John Doe</span>
+						<span>Welcome to BUG BASH,</span>
+						<span className="font-semibold">Zluri Itern</span>
 					</div>
 					<div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-						<span className="font-semibold">JD</span>
+						<span className="font-semibold">ZI</span>
 					</div>
 				</div>
 			</div>
