@@ -506,7 +506,7 @@ const TransactionTable: React.FC = () => {
 							placeholder="Search by Description"
 							value={searchDescription}
 							onChange={(e) => handleSearch(e.target.value)}
-							className="w-full sm:w-60"
+							className="w-full sm:w-auto max-w-xs sm:max-w-none"
 						/>
 						<Button
 							icon={<AiFillDelete />}
