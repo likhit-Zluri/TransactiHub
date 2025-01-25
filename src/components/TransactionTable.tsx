@@ -86,7 +86,8 @@ const TransactionTable: React.FC = () => {
 	useEffect(() => {
 		fetchTransactions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage, pageSize, searchDescription]);
+	}, []);
+	// currentPage, pageSize, searchDescription
 
 	// Handle single transaction delete
 	// const handleDelete = async (transactionId: UUID) => {
@@ -276,7 +277,7 @@ const TransactionTable: React.FC = () => {
 			title: "Amount",
 			dataIndex: "amount",
 			key: "amount",
-			render: (amount: string) => `${Number(amount)/100}`,
+			render: (amount: string) => `${Number(amount) / 100}`,
 			width: 1,
 		},
 		{
@@ -289,7 +290,7 @@ const TransactionTable: React.FC = () => {
 			title: "Amount in INR",
 			dataIndex: "amountInINR",
 			key: "amountInINR",
-			render: (amountInINR: string) => `₹${Number(amountInINR)/100}`,
+			render: (amountInINR: string) => `₹${Number(amountInINR) / 100}`,
 			width: 102,
 		},
 		{
@@ -496,20 +497,23 @@ const TransactionTable: React.FC = () => {
 	return (
 		<div className="p-4 min-h-screen bg-gray-100">
 			<div className="bg-white shadow-md rounded p-4">
-				<div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0">
-					<h2 className="text-lg font-semibold">Transactions</h2>
-					<div className="flex flex-wrap gap-2">
+				<div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 gap-2">
+					<h2 className="text-lg font-semibold text-center md:text-left">
+						Transactions
+					</h2>
+					<div className="flex flex-wrap gap-2 justify-center md:justify-end w-full">
 						<Input
 							placeholder="Search by Description"
 							value={searchDescription}
 							onChange={(e) => handleSearch(e.target.value)}
-							className="w-60"
+							className="w-full sm:w-60"
 						/>
 						<Button
 							icon={<AiFillDelete />}
 							danger
 							disabled={selectedIds.length === 0}
 							onClick={() => handleBulkDelete()}
+							className="w-full sm:w-auto max-w-xs sm:max-w-none"
 						>
 							Delete Selected
 						</Button>
@@ -518,17 +522,27 @@ const TransactionTable: React.FC = () => {
 							onClick={handleDeleteAll}
 							danger
 							disabled={totalTransactions === 0}
+							className="w-full sm:w-auto max-w-xs sm:max-w-none"
 						>
 							Delete All
 						</Button>
-						<Button icon={<AiOutlineFileAdd />} onClick={handleAddTransaction}>
+						<Button
+							icon={<AiOutlineFileAdd />}
+							onClick={handleAddTransaction}
+							className="w-full sm:w-auto max-w-xs sm:max-w-none"
+						>
 							Add
 						</Button>
-						<Button icon={<AiOutlineCloudUpload />} onClick={handleCSVUpload}>
+						<Button
+							icon={<AiOutlineCloudUpload />}
+							onClick={handleCSVUpload}
+							className="w-full sm:w-auto max-w-xs sm:max-w-none"
+						>
 							Upload CSV
 						</Button>
 					</div>
 				</div>
+
 				<Table
 					dataSource={transactionsList.map((transaction) => ({
 						key: transaction.id,
