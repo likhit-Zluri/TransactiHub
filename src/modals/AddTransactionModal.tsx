@@ -23,12 +23,12 @@ interface ErrorInterface {
 	date?: string;
 	currency?: string;
 }
-interface EditTransactionModalProps {
+interface AddTransactionModalProps {
 	setAddTransactionModal: (value: boolean) => void;
 	onTransactionAdded: () => void;
 }
 
-const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
+const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 	setAddTransactionModal,
 	onTransactionAdded,
 }) => {
@@ -249,13 +249,9 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 			const response = await addTransaction(updatedFormData);
 			console.log(response);
-			const editedTransaction: TransactionFromDB = response.data.transaction;
-			console.log("editedTransaction", editedTransaction);
+			const addedTransaction: TransactionFromDB = response.data.transaction;
+			console.log("addedTransaction", addedTransaction);
 
-			// const updatedDataSourceType: dataSourceType = {
-			// 	key: editedTransaction.id,
-			// 	...editedTransaction,
-			// };
 			// console.log("updatedDataSourceType",updatedDataSourceType)
 			onTransactionAdded();
 
@@ -347,6 +343,7 @@ const AddTransactionModal: React.FC<EditTransactionModalProps> = ({
 						onClick={(e) => {
 							(e.target as HTMLInputElement).showPicker();
 						}}
+						onKeyDown={(e) => e.preventDefault()}
 					/>
 
 					{errors.date && <p className="text-red-500">{errors.date}</p>}

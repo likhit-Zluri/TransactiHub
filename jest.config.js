@@ -5,9 +5,6 @@ export default {
 	moduleNameMapper: {
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",
 	},
-	"coveragePathIgnorePatterns": [
-		"<rootDir>/src/modals/AddTransactionModal.tsx"
-	],
 	setupFilesAfterEnv: ["<rootDir>/src/tests/setupTests.ts"],
 	transform: {
 		"^.+\\.(ts|tsx)$": [
