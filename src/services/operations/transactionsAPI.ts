@@ -118,11 +118,11 @@ export async function getPaginatedTransactions(
 			},
 		});
 
-		console.log("res in getPaginatedTransactions", res);
+		// console.log("res in getPaginatedTransactions", res);
 
 		notification.success({
-			message: "Transactions Fetched successfully",
-			description: res.data.message || "No Transactions found",
+			// message: "Transactions Fetched successfully",
+			message: res.data.message || "No Transactions found",
 			duration: 1,
 		});
 		return res.data;
