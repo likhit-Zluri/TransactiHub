@@ -34,8 +34,6 @@ import UploadCSVModal from "../modals/UploadCSVmodal";
 // const { Search } = Input;
 
 const TransactionTable: React.FC = () => {
-	console.log("first", import.meta.env);
-
 	const [currentPage, setCurrentPage] = useState(1); // Default to 1
 	const [pageSize, setPageSize] = useState(10); // Default to 10
 	const [loading, setLoading] = useState(false);
