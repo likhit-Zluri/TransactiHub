@@ -32,7 +32,11 @@ export const generateCsvForErrors = async (
 
 	// Combine both contents into one CSV
 	let combinedCsvContent =
-		"Index,Error Type,Error\n" + validationCsvContent + duplicationCsvContent;
+		"Index,Error Type,Error" + validationCsvContent + duplicationCsvContent;
+
+	if (validationCsvContent) combinedCsvContent += "\n" + validationCsvContent;
+
+	if (duplicationCsvContent) combinedCsvContent += "\n" + duplicationCsvContent;
 
 	// Add Existing Transaction Errors as well (if needed)
 	const existingTransactionCsvContent = generateCsvContent(
