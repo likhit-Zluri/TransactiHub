@@ -11,17 +11,17 @@ export const transactionEndpoints = {
 	// Get all transactions
 	GETPAGINATEDTRANSACTIONS_API: "/transactions",
 
-	GETSEARCH_API:"/searchtransactions",
-	
+	GETSEARCH_API: "/searchtransactions",
+
 	// Delete a transaction
 	DELETETRANSACTION_API: "/transactions/:id",
 
 	// Add multiple transactions through CSV
 	UPLOADTRANSACTIONS_API: "/transactions/upload",
 
-	// Multiple all transactions
+	// Delete multiple  transactions
 	MULTIPLEDELETE_API: "/transactions",
 
-	// Multiple all transactions
+	// Delete all transactions
 	BULKDELETE_API: "/allTransactions",
 };

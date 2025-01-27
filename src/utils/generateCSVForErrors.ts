@@ -11,7 +11,7 @@ export const generateCsvForErrors = async (
 		errorType: string
 	) => {
 		if (errors && errors.length > 0) {
-			let csvContent = "Index,Error Type,Error\n";
+			let csvContent = "";
 			csvContent += errors
 				.map(({ index, msg }) => `${index},"${errorType}","${msg}"`)
 				.join("\n");
@@ -31,7 +31,8 @@ export const generateCsvForErrors = async (
 	);
 
 	// Combine both contents into one CSV
-	let combinedCsvContent = validationCsvContent + "\n" + duplicationCsvContent;
+	let combinedCsvContent =
+		"Index,Error Type,Error\n" + validationCsvContent + duplicationCsvContent;
 
 	// Add Existing Transaction Errors as well (if needed)
 	const existingTransactionCsvContent = generateCsvContent(

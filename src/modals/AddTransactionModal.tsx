@@ -249,13 +249,15 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
 			const response = await addTransaction(updatedFormData);
 			console.log(response);
-			const addedTransaction: TransactionFromDB = response.data.transaction;
+			const addedTransaction: TransactionFromDB = response?.data?.transaction;
 			console.log("addedTransaction", addedTransaction);
 
 			// console.log("updatedDataSourceType",updatedDataSourceType)
-			onTransactionAdded();
 
-			setAddTransactionModal(false);
+			if (addedTransaction) {
+				onTransactionAdded();
+				setAddTransactionModal(false);
+			}
 		} finally {
 			setLoading(false);
 		}
