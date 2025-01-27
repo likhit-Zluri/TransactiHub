@@ -31,8 +31,7 @@ export const generateCsvForErrors = async (
 	);
 
 	// Combine both contents into one CSV
-	let combinedCsvContent =
-		"Index,Error Type,Error" + validationCsvContent + duplicationCsvContent;
+	let combinedCsvContent = "Index,Error Type,Error";
 
 	if (validationCsvContent) combinedCsvContent += "\n" + validationCsvContent;
 
