@@ -202,7 +202,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 			const response = await editTransaction(updatedFormData);
 
-			const editedTransaction: TransactionFromDB = response?.data?.transaction;
+			const editedTransaction: TransactionFromDB = response?.data?.editedTransaction;
 			console.log("editedTransaction", editedTransaction);
 
 			// const updatedDataSourceType: dataSourceType = {
