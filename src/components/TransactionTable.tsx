@@ -86,7 +86,7 @@ const TransactionTable: React.FC = () => {
 	useEffect(() => {
 		fetchTransactions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage, pageSize]);
+	}, [currentPage, pageSize, searchDescription]);
 	// currentPage, pageSize, searchDescription
 
 	// Handle the action of bulk deleting transactions which are selected
@@ -152,9 +152,6 @@ const TransactionTable: React.FC = () => {
 	const handleSearch = (value: string) => {
 		setSearchDescription(value);
 	};
-	const amountInINR = "319920000";
-	const temp = Number(amountInINR) / 100;
-	console.log("temp", temp.toLocaleString("hi"));
 
 	const columns = [
 		{
@@ -213,7 +210,7 @@ const TransactionTable: React.FC = () => {
 				return (
 					<div className="relative group cursor-pointer">
 						<span
-							className="block truncate group-hover:truncate-none group-hover:whitespace-normal group-hover:overflow-visible"
+							className="block whitespace-pre-wrap group-hover:overflow-visible"
 							title={text} // Full description as tooltip on hover
 							onDoubleClick={() => handleCopy(text)} // Trigger copy on double-click
 						>
