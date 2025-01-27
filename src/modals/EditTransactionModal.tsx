@@ -196,7 +196,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 				...formData,
 				date: dateFormatter(formData.date!),
 				amount: Number(formData.amount),
-				description: formData.description!.trim().replace(/\s+/g, " "),
+				description: formData.description!.trim(),
 			};
 			console.log("formData", formData);
 

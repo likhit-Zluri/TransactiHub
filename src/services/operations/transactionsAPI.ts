@@ -31,7 +31,7 @@ export async function addTransaction(data: TransactionInput) {
 		console.log("res in addTransaction", res);
 
 		notification.success({
-			message: "Transaction Added succesfully",
+			message: "Transaction Added successfully",
 			duration: 1,
 		});
 
@@ -39,7 +39,7 @@ export async function addTransaction(data: TransactionInput) {
 	} catch (error) {
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while Adding transactions",
+				message: "Error in Adding transaction",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
@@ -70,7 +70,7 @@ export const editTransaction = async (updatedData: {
 
 		console.log("res in editTransaction", res);
 		notification.success({
-			message: "Transaction Edited succesfully",
+			message: "Transaction Edited successfully",
 			duration: 1,
 		});
 
@@ -78,7 +78,7 @@ export const editTransaction = async (updatedData: {
 	} catch (error: unknown) {
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while Editing transactions",
+				message: "Error in Editing transaction",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
@@ -122,7 +122,7 @@ export async function getPaginatedTransactions(
 
 		notification.success({
 			// message: "Transactions Fetched successfully",
-			message: res.data.message || "No Transactions found",
+			message: res.data.message,
 			duration: 1,
 		});
 		return res.data;
@@ -130,7 +130,7 @@ export async function getPaginatedTransactions(
 		console.error("Error in getPaginatedTransactions:", error);
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while fetching transactions",
+				message: "Error in Fetching transactions",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
@@ -155,7 +155,7 @@ export async function deleteTransaction(transactionId: UUID) {
 
 		console.log("res in deleteTransaction", res);
 		notification.success({
-			message: "Transaction Deleted succesfully",
+			message: "Transaction Deleted successfully",
 			duration: 1,
 		});
 
@@ -163,12 +163,12 @@ export async function deleteTransaction(transactionId: UUID) {
 	} catch (error) {
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while Deleting transactions",
+				message: "Error in Deleting transaction",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
 		}
-		console.error("Error while Deleting transaction:", error);
+		console.error("Error in Deleting transaction:", error);
 	}
 }
 
@@ -205,7 +205,7 @@ export async function uploadTransactions(
 		console.log("res in uploadTransaction", res);
 
 		notification.success({
-			message: "Transactions Uploaded Successfully",
+			message: "Transactions Uploaded successfully",
 			description: `${res.data.successCount} transactions were added successfully.`,
 			duration: 1,
 		});
@@ -235,13 +235,13 @@ export async function uploadTransactions(
 
 			// Show notification to the user
 			notification.error({
-				message: "Error while Uploading Transactions",
+				message: "Error in Uploading Transactions",
 				description: `Some records failed validation, duplication, or already exist in the database. CSV files have been downloaded for each error type.`,
 				duration: 3,
 			});
 		} else if (error instanceof AxiosError) {
 			notification.error({
-				message: "Error while Uploading Transactions",
+				message: "Error in Uploading Transactions",
 				description: error.response?.data.message,
 				duration: 3,
 			});
@@ -264,7 +264,7 @@ export async function deleteMultipleTransactions(ids: UUID[]) {
 		console.log("res in deleteTransactions", res);
 
 		notification.success({
-			message: "Transactions Deleted succesfully",
+			message: "Transactions Deleted successfully",
 			duration: 1,
 		});
 
@@ -272,7 +272,7 @@ export async function deleteMultipleTransactions(ids: UUID[]) {
 	} catch (error) {
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while Deleting transactions",
+				message: "Error in Deleting transactions",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
@@ -294,7 +294,7 @@ export async function deleteAllTransactions() {
 		console.log("res in deleteAllTransactions", res);
 
 		notification.success({
-			message: "All Transactions Deleted succesfully",
+			message: "All Transactions Deleted successfully",
 			duration: 1,
 		});
 
@@ -302,7 +302,7 @@ export async function deleteAllTransactions() {
 	} catch (error) {
 		if (error instanceof AxiosError && error.response) {
 			notification.error({
-				message: "Error while All Deleting transactions",
+				message: "Error in Deleting All transactions",
 				description: `${error.response.data.message}`,
 				duration: 2,
 			});
