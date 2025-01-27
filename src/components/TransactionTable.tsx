@@ -152,6 +152,9 @@ const TransactionTable: React.FC = () => {
 	const handleSearch = (value: string) => {
 		setSearchDescription(value);
 	};
+	const amountInINR = "319920000";
+	const temp = Number(amountInINR) / 100;
+	console.log("temp", temp.toLocaleString("hi"));
 
 	const columns = [
 		{
@@ -224,7 +227,8 @@ const TransactionTable: React.FC = () => {
 			title: "Amount",
 			dataIndex: "amount",
 			key: "amount",
-			render: (amount: string) => `${Number(amount) / 100}`,
+			render: (amount: string) =>
+				`${(Number(amount) / 100).toLocaleString("hi")}`,
 			width: 1,
 		},
 		{
@@ -237,7 +241,8 @@ const TransactionTable: React.FC = () => {
 			title: "Amount in INR",
 			dataIndex: "amountInINR",
 			key: "amountInINR",
-			render: (amountInINR: string) => `₹${Number(amountInINR) / 100}`,
+			render: (amountInINR: string) =>
+				`₹${(Number(amountInINR) / 100).toLocaleString("hi")}`,
 			width: 102,
 		},
 		{

@@ -243,7 +243,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 				...formData,
 				date: dateFormatter(formData.date!),
 				amount: Number(formData.amount),
-				description: formData.description!.trim(),
+				description: formData.description!.trim().replace(/\s+/g, " "),
 			};
 			console.log("formdata", formData, updatedFormData);
 
