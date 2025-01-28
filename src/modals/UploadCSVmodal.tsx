@@ -110,7 +110,7 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 					checked={skipDuplicates}
 					onChange={(e) => setSkipDuplicates(e.target.checked)}
 				>
-					Skip duplicate rows
+					Skip duplicate rows in CSV file
 				</Checkbox>
 
 				{/* Instructions */}
