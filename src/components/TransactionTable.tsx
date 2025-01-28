@@ -286,7 +286,11 @@ const TransactionTable: React.FC = () => {
 						<Input
 							placeholder="Search by Description"
 							value={searchDescription}
-							onChange={(e) => handleSearch(e.target.value)}
+							onChange={(e) => {
+								handleSearch(e.target.value);
+								setCurrentPage(1);
+								// setPageSize(10);
+							}}
 							className="w-full sm:w-auto max-w-xs sm:max-w-none"
 						/>
 						<Button
@@ -338,7 +342,7 @@ const TransactionTable: React.FC = () => {
 						current: currentPage,
 						total: totalTransactions,
 						pageSize,
-						pageSizeOptions:[10, 20, 50],
+						pageSizeOptions: [10, 20, 50],
 						showSizeChanger: true,
 						onChange: (page, size) => {
 							// Calculate the new page number to keep the user on the same relative transactions
