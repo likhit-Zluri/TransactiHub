@@ -315,6 +315,11 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 						value={formData.amount}
 						onChange={handleAmountChange}
 						// onBlur={handleBlur}
+						onKeyDown={(e) => {
+							if (["e", "E", "+", "-"].includes(e.key)) {
+								e.preventDefault(); // Prevent non-numeric input
+							}
+						}}
 						disabled={loading}
 						className="w-full"
 					/>

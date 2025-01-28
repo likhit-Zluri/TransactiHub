@@ -202,7 +202,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
 			const response = await editTransaction(updatedFormData);
 
-			const editedTransaction: TransactionFromDB = response?.data?.editedTransaction;
+			const editedTransaction: TransactionFromDB =
+				response?.data?.editedTransaction;
 			console.log("editedTransaction", editedTransaction);
 
 			// const updatedDataSourceType: dataSourceType = {
@@ -272,6 +273,11 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 						value={formData.amount}
 						onChange={handleAmountChange}
 						// onBlur={handleBlur}
+						onKeyDown={(e) => {
+							if (['e', 'E', '+', '-'].includes(e.key)) {
+								e.preventDefault(); // Prevent non-numeric input
+							}
+						}}
 						disabled={loading}
 						className="w-full"
 					/>
