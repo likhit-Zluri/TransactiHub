@@ -94,9 +94,9 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 					onRemove={() => setFile(null)}
 					maxCount={1}
 				>
-					<div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl border-gray-300 hover:border-blue-500 transition duration-300">
+					<div className="flex flex-col items-center justify-center p-2 border-2 border-dashed rounded-xl border-gray-300 hover:border-blue-500 transition duration-300">
 						<UploadOutlined className="text-3xl text-blue-500" />
-						<p className="mt-2 text-lg font-semibold text-gray-700">
+						<p className="text-lg font-semibold text-gray-700">
 							Select or Drag & Drop CSV File
 						</p>
 						<p className="text-sm text-gray-500">
@@ -112,6 +112,12 @@ const UploadCSVModal: React.FC<UploadCSVModalProps> = ({
 				>
 					Skip duplicate rows in CSV file
 				</Checkbox>
+
+				<div className="text-sm text-gray-600">
+					<strong>Note:</strong> Enabling this option ensures that duplicate
+					rows in the uploaded CSV file are ignored during processing. Only the
+					first occurrence of a duplicate row will be stored in the database.
+				</div>
 
 				{/* Instructions */}
 				<div className="bg-gray-50 p-2 rounded-lg shadow-md">
