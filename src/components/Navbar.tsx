@@ -8,7 +8,7 @@ const Navbar: React.FC = () => {
 				<div className="flex items-center space-x-4">
 					<div className="text-sm">
 						<span>Welcome to BUG BASH,</span>
-						<span className="font-semibold">Zluri Itern</span>
+						<span className="font-semibold">Zluri Intern</span>
 					</div>
 					<div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
 						<span className="font-semibold">ZI</span>
